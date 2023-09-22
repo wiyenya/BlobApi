@@ -1,0 +1,16 @@
+log:
+  level: debug
+  disable_sentry: true
+
+db:
+  url: postgres://kate:kate123@localhost:5432/mydatabase?sslmode=disable
+
+listener:
+  addr: :8080
+
+cop:
+  disabled: true
+  endpoint: "http://..."
+  upstream: "http://..."
+  service_name: BlobApi
+  service_port: 80

@@ -1,0 +1,12 @@
+type: object
+required:
+  - id
+  - blob
+properties:
+  id:
+    type: string
+  blob:
+    type: object
+    format: json.RawMessage # Go тип при генерации
+    enum:
+      - blob
