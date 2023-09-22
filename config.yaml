@@ -6,7 +6,7 @@ db:
   url: postgres://kate:kate123@localhost:5432/mydatabase?sslmode=disable
 
 listener:
-  addr: :8080
+  addr: :5432
 
 cop:
   disabled: true
