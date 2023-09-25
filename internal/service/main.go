@@ -3,15 +3,17 @@ package service
 import (
 	"net"
 	"net/http"
+	"time"
 
 	"BlobApi/internal/config"
 
+	"github.com/go-chi/chi"
+	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/kit/copus/types"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-
-	"gitlab.com/tokend/api/internal/api/handlers"
-    "gitlab.com/tokend/api/internal/api/middlewares"
+	// "gitlab.com/tokend/api/internal/api/handlers"
+	// "gitlab.com/tokend/api/internal/api/middlewares"
 )
 
 type service struct {
@@ -46,21 +48,20 @@ func Run(cfg config.Config) {
 }
 
 func BlobsRouter(entry *logan.Entry) chi.Router {
-    r := chi.NewRouter()
+	r := chi.NewRouter()
 
-    r.Use(
-        ape.RecoverMiddleware(entry),
-        middlewares.Logger(entry, 300*time.Millisecond),
-    )
+	r.Use(
+		ape.RecoverMiddleware(entry),
+		middlewares.Logger(entry, 300*time.Millisecond),
+	)
 
 	// blobs
-    r.Route("/integrations/BlobApi", func(r chi.Router) {
-        r.Post("/", handlers.CreateBlob)
-        r.Get("/", handlers.GetBlobList)         // Получение списка блобов
-        r.Get("/{blobID}", handlers.GetBlob)    // Получение блоба по ID
-        r.Delete("/{blobID}", handlers.DeleteBlob) // Удаление блоба по ID
-    })
+	r.Route("/integrations/BlobApi", func(r chi.Router) {
+		r.Post("/", handlers.CreateBlob)
+		r.Get("/", handlers.GetBlobList)           // Получение списка блобов
+		r.Get("/{blobID}", handlers.GetBlob)       // Получение блоба по ID
+		r.Delete("/{blobID}", handlers.DeleteBlob) // Удаление блоба по ID
+	})
 
-
-    return r
+	return r
 }
