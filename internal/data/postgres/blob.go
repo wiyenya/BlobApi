@@ -71,11 +71,11 @@ func (m *BlobModel) GetBlobList() ([]*data.Blob, error) {
 	var blobs []*data.Blob
 	for rows.Next() {
 		b := &data.Blob{}
-		err := rows.Scan(&b.ID, &b.UserID, &b.Data) // Используйте Scan для извлечения значений каждой строки
+		err := rows.Scan(&b.ID, &b.UserID, &b.Data)
 		if err != nil {
 			return nil, err
 		}
-		blobs = append(blobs, b) // Добавьте блоб в список
+		blobs = append(blobs, b)
 	}
 
 	if err = rows.Err(); err != nil {
