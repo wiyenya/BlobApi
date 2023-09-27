@@ -26,25 +26,12 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Вставка блоба
-	blobID, err := h.Model.Insert(req.UserID, req.Data)
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	// Формирование и отправка ответа
-	respBlob := &data.Blob{
-		ID:     blobID,
-		UserID: req.UserID,
-		Data:   req.Data,
-	}
-
-	respBytes, err := json.Marshal(respBlob)
+	_, err = h.Model.Insert(req.UserID, req.Data)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
 	w.Header().Set("Content-Type", "application/json")
-	w.Write(respBytes)
+	w.WriteHeader(http.StatusCreated)
 }
