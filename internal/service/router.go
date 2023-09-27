@@ -17,8 +17,12 @@ func (s *service) router() chi.Router {
 			handlers.CtxLog(s.log),
 		),
 	)
+
 	r.Route("/integrations/BlobApi", func(r chi.Router) {
-		// configure endpoints here
+		r.Post("/", handlers.CreateBlob)
+		r.Get("/", handlers.GetBlobID)             // Получение списка блобов
+		r.Get("/{blobID}", handlers.GetBlob)       // Получение блоба по ID
+		r.Delete("/{blobID}", handlers.DeleteBlob) // Удаление блоба по ID
 	})
 
 	return r
