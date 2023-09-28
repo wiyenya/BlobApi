@@ -13,9 +13,9 @@ type BlobModel struct {
 
 func (m *BlobModel) Insert(userID int, data string) (int, error) {
 	query := `
-	INSERT INTO blobs (user_id, data) 
+	INSERT INTO my_table (user_id, data) 
 	VALUES ($1, $2) 
-	RETURNING id;
+	RETURNING index;
 	`
 
 	var id int
@@ -40,9 +40,9 @@ func (m *BlobModel) Insert(userID int, data string) (int, error) {
 
 func (m *BlobModel) Get(id int) (*data.Blob, error) {
 	query := `
-	SELECT id, user_id, data 
-	FROM blobs 
-	WHERE id = $1;
+	SELECT index, user_id, data 
+	FROM my_table 
+	WHERE index = $1;
 	`
 
 	b := &data.Blob{}
@@ -58,8 +58,8 @@ func (m *BlobModel) Get(id int) (*data.Blob, error) {
 
 func (m *BlobModel) GetBlobList() ([]*data.Blob, error) {
 	query := `
-	SELECT id, user_id, data 
-	FROM blobs;
+	SELECT index, user_id, data 
+	FROM my_table;
 	`
 
 	rows, err := m.DB.Query(query)
@@ -87,8 +87,8 @@ func (m *BlobModel) GetBlobList() ([]*data.Blob, error) {
 
 func (m *BlobModel) Delete(id int) error {
 	query := `
-	DELETE FROM blobs 
-	WHERE id = $1;
+	DELETE FROM my_table 
+	WHERE index = $1;
 	`
 
 	result, err := m.DB.Exec(query, id)

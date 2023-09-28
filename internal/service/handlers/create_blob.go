@@ -1,11 +1,10 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 
-	data "BlobApi/internal/data"
 	postgres "BlobApi/internal/data/postgres"
+	requests "BlobApi/internal/service/requests"
 )
 
 type BlobHandler struct {
@@ -18,8 +17,8 @@ func NewBlobHandler(m *postgres.BlobModel) *BlobHandler {
 
 func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 	// Декодирование тела запроса
-	var req data.Blob
-	err := json.NewDecoder(r.Body).Decode(&req)
+
+	req, err := requests.DecodeCreateBlobRequest(r)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusBadRequest)
 		return

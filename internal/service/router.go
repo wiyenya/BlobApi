@@ -16,7 +16,7 @@ import (
 func (s *service) router() chi.Router {
 
 	//инициализация базы данных
-	connStr := "postgres://kate:kate123@localhost:5432/mydatabase?sslmode=disable"
+	connStr := "postgres://postgres:kate123@localhost:5432/mydatabase?sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)

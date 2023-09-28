@@ -3,10 +3,10 @@ log:
   disable_sentry: true
 
 db:
-  url: postgres://kate:kate123@localhost:5432/mydatabase?sslmode=disable
+  url: postgres://postgres:kate123@localhost:5432/mydatabase?sslmode=disable
 
 listener:
-  addr: :5432
+  addr: :8080
 
 cop:
   disabled: true
