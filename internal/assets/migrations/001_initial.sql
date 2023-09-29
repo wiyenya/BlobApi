@@ -3,7 +3,6 @@
 CREATE TABLE my_table
 (
     index BIGSERIAL PRIMARY KEY,
-    user_id INTEGER,
     data TEXT
 );
 

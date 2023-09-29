@@ -1,12 +1,12 @@
 type: object
 required:
-  - id
-  - blob
+  - UserID
+  - Data
 properties:
-  id:
+  UserID:
+    type: integer
+    format: int32
+    example: 2
+  Data:
     type: string
-  blob:
-    type: object
-    format: json.RawMessage # Go тип при генерации
-    enum:
-      - blob
+    example: "test"

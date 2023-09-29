@@ -16,7 +16,7 @@ func NewBlobHandler(m *postgres.BlobModel) *BlobHandler {
 }
 
 func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
-	// Декодирование тела запроса
+	// Decoding the request body
 
 	req, err := requests.DecodeCreateBlobRequest(r)
 	if err != nil {
@@ -25,7 +25,7 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Вставка блоба
-	_, err = h.Model.Insert(req.UserID, req.Data)
+	_, err = h.Model.Insert(req.Attributes.Value)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

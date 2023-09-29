@@ -6,14 +6,10 @@ allOf:
     properties:
       attributes:
         type: object
-        required:
-          - id
-          - blob
         properties:
-          id:
-            type: integer
-            format: int64
-          blob:
-            type: object
-            format: json.RawMessage # Go тип при генерации
-          
+          value:
+            description: arbitrary text
+            type: string
+            example: foobar
+        required:
+          - value

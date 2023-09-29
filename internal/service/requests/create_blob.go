@@ -3,19 +3,17 @@ package requests
 import (
 	"encoding/json"
 	"net/http"
+
+	resourses "BlobApi/resources"
 )
 
-type CreateBlobRequest struct {
-	UserID int    `json:"user_id"`
-	Data   string `json:"data"`
-}
+func DecodeCreateBlobRequest(r *http.Request) (*resourses.BlobRequest, error) {
 
-func DecodeCreateBlobRequest(r *http.Request) (*CreateBlobRequest, error) {
-	var req CreateBlobRequest
+	var req resourses.BlobRequestResponse
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		return nil, err
 	}
 
-	return &req, nil
+	return &req.Data, nil
 }
