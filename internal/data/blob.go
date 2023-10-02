@@ -1,7 +1,7 @@
 package data
 
 type Blob struct {
-	// ID     int    `json:"id"`
+	ID int `json:"id"`
 	// UserID int    `json:"user_id"`
 	Data string `json:"data"`
 }
