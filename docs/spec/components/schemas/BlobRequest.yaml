@@ -11,6 +11,10 @@ allOf:
             description: arbitrary text
             type: string
             example: foobar
+          UserID:
+            type: integer
+            format: int
+            example: 2
         required:
           - value
 

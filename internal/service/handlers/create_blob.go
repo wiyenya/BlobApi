@@ -25,7 +25,7 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Вставка блоба
-	_, err = h.Model.Insert(req.Attributes.Value)
+	_, err = h.Model.Insert(req.Attributes.UserID, req.Attributes.Value)
 	if err != nil {
 		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return

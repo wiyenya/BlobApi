@@ -15,23 +15,23 @@ import (
 
 func (s *service) router() chi.Router {
 
-	//инициализация базы данных
+	// Initializing the database
 	connStr := "postgres://postgres:kate123@localhost:5432/mydatabase?sslmode=disable"
 	db, err := sql.Open("postgres", connStr)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = db.Ping() // Пинговать базу данных, чтобы убедиться, что соединение установлено
+	err = db.Ping() // Ping the database to make sure the connection is established
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	//Создание Экземпляра BlobModel
-	yourBlobModel := &postgres.BlobModel{DB: db}
+	//	Create BlobModel instance
+	BlobModel := &postgres.BlobModel{DB: db}
 
-	//Создание Экземпляра BlobHandler
-	handler := handlers.NewBlobHandler(yourBlobModel)
+	//	Create BlobHandler instance
+	handler := handlers.NewBlobHandler(BlobModel)
 
 	r := chi.NewRouter()
 
@@ -46,7 +46,7 @@ func (s *service) router() chi.Router {
 	r.Route("/integrations/BlobApi", func(r chi.Router) {
 		r.Post("/", handler.CreateBlob)
 		r.Get("/", handlers.GetBlobList)           // Получение списка блобов
-		r.Get("/{blobID}", handlers.GetBlobID)     // Получение блоба по ID
+		r.Get("/{blobID}", handler.GetBlobID)      // Получение блоба по ID
 		r.Delete("/{blobID}", handlers.DeleteBlob) // Удаление блоба по ID
 	})
 

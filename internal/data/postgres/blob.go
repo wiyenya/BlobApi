@@ -2,22 +2,25 @@ package models
 
 import (
 	"database/sql"
+	"errors"
 	"fmt"
+
+	data "BlobApi/internal/data"
 )
 
 type BlobModel struct {
 	DB *sql.DB
 }
 
-func (m *BlobModel) Insert(data string) (int, error) {
+func (m *BlobModel) Insert(userID *int32, data string) (int, error) {
 	query := `
-	INSERT INTO my_table (data) 
-	VALUES ($1) 
+	INSERT INTO my_table (user_id, data) 
+	VALUES ($1, $2)
 	RETURNING index;
 	`
 
 	var id int
-	res, err := m.DB.Exec(query, data)
+	res, err := m.DB.Exec(query, userID, data)
 	if err != nil {
 		return 0, err
 	}
@@ -36,23 +39,23 @@ func (m *BlobModel) Insert(data string) (int, error) {
 	return id, nil
 }
 
-// func (m *BlobModel) Get(id int) (*data.Blob, error) {
-// 	query := `
-// 	SELECT index, user_id, data
-// 	FROM my_table
-// 	WHERE index = $1;
-// 	`
+func (m *BlobModel) Get(id int) (*data.Blob, error) {
+	query := `
+	SELECT index, user_id, data
+	FROM my_table
+	WHERE index = $1;
+	`
 
-// 	b := &data.Blob{}
-// 	err := m.DB.QueryRow(query, id).Scan(&b.ID, &b.UserID, &b.Data)
-// 	if err == sql.ErrNoRows {
-// 		return nil, errors.New("blob not found")
-// 	} else if err != nil {
-// 		return nil, err
-// 	}
+	b := &data.Blob{}
+	err := m.DB.QueryRow(query, id).Scan(&b.ID, &b.UserID, &b.Data)
+	if err == sql.ErrNoRows {
+		return nil, errors.New("blob not found")
+	} else if err != nil {
+		return nil, err
+	}
 
-// 	return b, nil
-// }
+	return b, nil
+}
 
 // func (m *BlobModel) GetBlobList() ([]*data.Blob, error) {
 // 	query := `
