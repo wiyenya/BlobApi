@@ -2,8 +2,8 @@ package handlers
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
-	"strconv"
 
 	requests "BlobApi/internal/service/requests"
 )
@@ -20,19 +20,19 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 
 	id, err := requests.DecodeGetBlobRequest(r)
 	if err != nil || id < 1 {
-		http.Error(w, strconv.Itoa(id), http.StatusBadRequest)
+		http.Error(w, "Invalid ID", http.StatusBadRequest)
 		return
 	}
 
 	// Retrieve record by ID
 	blob, err := h.Model.Get(id)
 	if err != nil {
-		http.Error(w, "Server error", http.StatusInternalServerError)
+		http.Error(w, fmt.Sprintf("error getting blob: %v", err), http.StatusInternalServerError)
 		return
 	}
 
 	if blob == nil {
-		http.Error(w, "No record found", http.StatusNotFound)
+		http.Error(w, "No blob found", http.StatusNotFound)
 		return
 	}
 

@@ -45,9 +45,9 @@ func (s *service) router() chi.Router {
 
 	r.Route("/integrations/BlobApi", func(r chi.Router) {
 		r.Post("/", handler.CreateBlob)
-		r.Get("/", handlers.GetBlobList)           // Получение списка блобов
-		r.Get("/{blobID}", handler.GetBlobID)      // Получение блоба по ID
-		r.Delete("/{blobID}", handlers.DeleteBlob) // Удаление блоба по ID
+		r.Get("/", handlers.GetBlobList)          // Получение списка блобов
+		r.Get("/{blobID}", handler.GetBlobID)     // Получение блоба по ID
+		r.Delete("/{blobID}", handler.DeleteBlob) // Удаление блоба по ID
 	})
 
 	return r

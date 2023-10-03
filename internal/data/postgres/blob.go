@@ -86,25 +86,25 @@ func (m *BlobModel) Get(id int) (*data.Blob, error) {
 // 	return blobs, nil
 // }
 
-// func (m *BlobModel) Delete(id int) error {
-// 	query := `
-// 	DELETE FROM my_table
-// 	WHERE index = $1;
-// 	`
+func (m *BlobModel) Delete(id int) error {
+	query := `
+	DELETE FROM my_table
+	WHERE index = $1;
+	`
 
-// 	result, err := m.DB.Exec(query, id)
-// 	if err != nil {
-// 		return err
-// 	}
+	result, err := m.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
 
-// 	// Проверка, что была удалена хотя бы одна строка
-// 	rowsAffected, err := result.RowsAffected()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if rowsAffected == 0 {
-// 		return errors.New("no rows affected, blob might not exist")
-// 	}
+	// Проверка, что была удалена хотя бы одна строка
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return errors.New("no rows affected, blob might not exist")
+	}
 
-// 	return nil
-// }
+	return nil
+}
