@@ -57,34 +57,35 @@ func (m *BlobModel) Get(id int) (*data.Blob, error) {
 	return b, nil
 }
 
-// func (m *BlobModel) GetBlobList() ([]*data.Blob, error) {
-// 	query := `
-// 	SELECT index, user_id, data
-// 	FROM my_table;
-// 	`
+func (m *BlobModel) GetBlobList() ([]*data.Blob, error) {
+	query := `
+	SELECT index, user_id, data
+	FROM my_table;
+	`
 
-// 	rows, err := m.DB.Query(query)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer rows.Close()
+	rows, err := m.DB.Query(query)
+	if err != nil {
+		return nil, err
+	}
 
-// 	var blobs []*data.Blob
-// 	for rows.Next() {
-// 		b := &data.Blob{}
-// 		err := rows.Scan(&b.ID, &b.UserID, &b.Data)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		blobs = append(blobs, b)
-// 	}
+	defer rows.Close()
 
-// 	if err = rows.Err(); err != nil {
-// 		return nil, err
-// 	}
+	var blobs []*data.Blob
+	for rows.Next() {
+		b := &data.Blob{}
+		err := rows.Scan(&b.ID, &b.UserID, &b.Data)
+		if err != nil {
+			return nil, err
+		}
+		blobs = append(blobs, b)
+	}
 
-// 	return blobs, nil
-// }
+	if err = rows.Err(); err != nil {
+		return nil, err
+	}
+
+	return blobs, nil
+}
 
 func (m *BlobModel) Delete(id int) error {
 	query := `
@@ -97,7 +98,7 @@ func (m *BlobModel) Delete(id int) error {
 		return err
 	}
 
-	// Проверка, что была удалена хотя бы одна строка
+	// Check that at least one line has been deleted
 	rowsAffected, err := result.RowsAffected()
 	if err != nil {
 		return err
