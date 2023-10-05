@@ -4,7 +4,7 @@ CREATE TABLE my_table
 (
     index BIGSERIAL PRIMARY KEY,
     user_id INT, 
-    data TEXT
+    data jsonb
 );
 
 -- +migrate Down

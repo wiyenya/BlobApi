@@ -1,9 +1,11 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
+
+	"gitlab.com/distributed_lab/ape"
+	"gitlab.com/distributed_lab/ape/problems"
 
 	postgres "BlobApi/internal/data/postgres"
 	requests "BlobApi/internal/service/requests"
@@ -22,21 +24,22 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 
 	req, err := requests.DecodeCreateBlobRequest(r)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
+		ape.RenderErr(w, problems.BadRequest(err)...)
 		return
 	}
 
 	// Converting string ID to int
 	id, err := strconv.Atoi(req.Relationships.Owner.Data.ID)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("Invalid ID format: %v", err), http.StatusBadRequest)
+		Log(r).WithError(err).Error("Invalid ID format:")
+		ape.RenderErr(w, problems.BadRequest(err)...)
 		return
 	}
 
 	// Inserting a blob
 	_, err = h.Model.Insert(id, req.Attributes.Value)
 	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
+		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 

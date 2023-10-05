@@ -5,6 +5,9 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+
+	"gitlab.com/distributed_lab/ape"
+	"gitlab.com/distributed_lab/ape/problems"
 )
 
 type ListResponse struct {
@@ -15,12 +18,16 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 
 	blobs, err := h.Model.GetBlobList()
 	if err != nil {
-		http.Error(w, fmt.Sprintf("error getting blobs: %v", err), http.StatusInternalServerError)
+
+		Log(r).WithError(err).Error("error getting blob:")
+		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
 	if blobs == nil {
-		http.Error(w, "No blob found", http.StatusNotFound)
+
+		Log(r).WithError(err).Error("No blob found")
+		ape.RenderErr(w, problems.NotFound())
 		return
 	}
 
@@ -61,7 +68,8 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 	// Encoding and sending the response
 	err_res := json.NewEncoder(w).Encode(resp)
 	if err_res != nil {
-		http.Error(w, "Cannot encode response", http.StatusInternalServerError)
+		Log(r).WithError(err).Error("Cannot encode response")
+		ape.RenderErr(w, problems.InternalError())
 	}
 
 }

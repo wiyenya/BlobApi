@@ -2,11 +2,13 @@ package handlers
 
 import (
 	"encoding/json"
-	"fmt"
 	"net/http"
 	"strconv"
 
 	requests "BlobApi/internal/service/requests"
+
+	"gitlab.com/distributed_lab/ape"
+	"gitlab.com/distributed_lab/ape/problems"
 )
 
 type Response struct {
@@ -39,19 +41,26 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 
 	id, err := requests.DecodeGetBlobRequest(r)
 	if err != nil || id < 1 {
-		http.Error(w, "Invalid ID", http.StatusBadRequest)
+
+		Log(r).WithError(err).Error("Invalid ID")
+		ape.RenderErr(w, problems.BadRequest(err)...)
+
 		return
 	}
 
 	// Retrieve record by ID
 	blob, err := h.Model.Get(id)
 	if err != nil {
-		http.Error(w, fmt.Sprintf("error getting blob: %v", err), http.StatusInternalServerError)
+
+		Log(r).WithError(err).Error("error getting blob:")
+		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
 	if blob == nil {
-		http.Error(w, "No blob found", http.StatusNotFound)
+
+		Log(r).WithError(err).Error("No blob found")
+		ape.RenderErr(w, problems.NotFound())
 		return
 	}
 
@@ -78,7 +87,9 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 	// Encoding and sending the response
 	err_res := json.NewEncoder(w).Encode(resp)
 	if err_res != nil {
-		http.Error(w, "Cannot encode response", http.StatusInternalServerError)
+
+		Log(r).WithError(err).Error("Cannot encode response")
+		ape.RenderErr(w, problems.InternalError())
 	}
 
 }
