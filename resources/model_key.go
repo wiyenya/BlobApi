@@ -13,8 +13,8 @@ type Key struct {
 
 func NewKeyInt64(id int64, resourceType ResourceType) Key {
 	return Key{
-		ID: strconv.FormatInt(id, 10),
-		//Type: resourceType,
+		ID:   strconv.FormatInt(id, 10),
+		Type: resourceType,
 	}
 }
 

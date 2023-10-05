@@ -12,7 +12,7 @@ type BlobModel struct {
 	DB *sql.DB
 }
 
-func (m *BlobModel) Insert(userID *int32, data string) (int, error) {
+func (m *BlobModel) Insert(userID int, data string) (int, error) {
 	query := `
 	INSERT INTO my_table (user_id, data) 
 	VALUES ($1, $2)

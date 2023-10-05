@@ -6,7 +6,8 @@ package resources
 
 type BlobRequest struct {
 	Key
-	Attributes BlobRequestAttributes `json:"attributes"`
+	Attributes    BlobRequestAttributes    `json:"attributes"`
+	Relationships BlobRequestRelationships `json:"relationships"`
 }
 type BlobRequestResponse struct {
 	Data     BlobRequest `json:"data"`

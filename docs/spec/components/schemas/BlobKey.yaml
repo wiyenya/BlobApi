@@ -1,12 +1,12 @@
 type: object
 required:
-  - UserID
-  - Data
+  - id
+  - type
 properties:
-  UserID:
+  id:
     type: integer
-    format: int32
-    example: 2
-  Data:
+    example: "2"
+  type:
     type: string
-    example: "test"
+    description: blob type
+    example: asset_description

@@ -4,16 +4,35 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	requests "BlobApi/internal/service/requests"
 )
 
 type Response struct {
-	Data AttributeData `json:"data"`
+	Data BlobData `json:"data"`
 }
 
-type AttributeData struct {
-	Attributes interface{} `json:"attributes"`
+type BlobData struct {
+	ID            string            `json:"id"`
+	Attributes    BlobAttributes    `json:"attributes"`
+	Relationships BlobRelationships `json:"relationships"`
+}
+
+type BlobAttributes struct {
+	Value string `json:"value"`
+}
+
+type BlobRelationships struct {
+	Owner BlobOwner `json:"owner"`
+}
+
+type BlobOwner struct {
+	Data OwnerData `json:"data"`
+}
+
+type OwnerData struct {
+	ID string `json:"id"`
 }
 
 func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
@@ -38,8 +57,18 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 
 	// Wrap Blob in AttributeData and Response structures
 	resp := Response{
-		Data: AttributeData{
-			Attributes: blob,
+		Data: BlobData{
+			ID: strconv.Itoa(blob.ID), // Convert int ID to string
+			Attributes: BlobAttributes{
+				Value: blob.Data,
+			},
+			Relationships: BlobRelationships{
+				Owner: BlobOwner{
+					Data: OwnerData{
+						ID: strconv.Itoa(int(*blob.UserID)), // Convert int UserID to string
+					},
+				},
+			},
 		},
 	}
 

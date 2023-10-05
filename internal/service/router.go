@@ -43,11 +43,11 @@ func (s *service) router() chi.Router {
 		),
 	)
 
-	r.Route("/integrations/BlobApi", func(r chi.Router) {
+	r.Route("/integrations/blobs", func(r chi.Router) {
 		r.Post("/", handler.CreateBlob)
-		r.Get("/", handler.GetBlobList)           // Получение списка блобов
-		r.Get("/{blobID}", handler.GetBlobID)     // Получение блоба по ID
-		r.Delete("/{blobID}", handler.DeleteBlob) // Удаление блоба по ID
+		r.Get("/", handler.GetBlobList)
+		r.Get("/{blob_id}", handler.GetBlobID)
+		r.Delete("/{blob_id}", handler.DeleteBlob)
 	})
 
 	return r

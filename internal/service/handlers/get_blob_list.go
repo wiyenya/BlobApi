@@ -4,7 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 )
+
+type ListResponse struct {
+	Data []BlobData `json:"data"`
+}
 
 func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 
@@ -19,11 +24,35 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Wrap Blob in AttributeData and Response structures
-	resp := Response{
-		Data: AttributeData{
-			Attributes: blobs,
-		},
+	// Список для хранения преобразованных данных Blob
+	var responseData []BlobData
+	for _, blob := range blobs {
+		if blob == nil {
+			fmt.Println("Warning: encountered nil blob")
+			continue
+		}
+		if blob.UserID == nil {
+			fmt.Println("Warning: UserID is nil for blob ID:", blob.ID)
+			continue
+		}
+		responseData = append(responseData, BlobData{
+			ID: strconv.Itoa(blob.ID),
+			Attributes: BlobAttributes{
+				Value: blob.Data,
+			},
+			Relationships: BlobRelationships{
+				Owner: BlobOwner{
+					Data: OwnerData{
+						ID: strconv.Itoa(int(*blob.UserID)),
+					},
+				},
+			},
+		})
+	}
+
+	// Собираем и отправляем ответ
+	resp := ListResponse{
+		Data: responseData,
 	}
 
 	// Content-Type header for the response

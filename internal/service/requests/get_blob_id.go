@@ -9,7 +9,7 @@ import (
 
 func DecodeGetBlobRequest(r *http.Request) (int, error) {
 
-	idStr := chi.URLParam(r, "blobID")
+	idStr := chi.URLParam(r, "blob_id")
 	id, err := strconv.Atoi(idStr)
 	if err != nil || id < 1 {
 		return 0, err
