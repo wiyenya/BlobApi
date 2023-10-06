@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
 	"strconv"
 
@@ -83,14 +82,6 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 
 	// Content-Type header for the response
 	w.Header().Set("Content-Type", "application/json")
-
-	// Encoding and sending the response
-	err_res := json.NewEncoder(w).Encode(resp)
-	if err_res != nil {
-
-		Log(r).WithError(err).Error("Cannot encode response")
-		ape.RenderErr(w, problems.InternalError())
-	}
 
 	ape.Render(w, &resp)
 }

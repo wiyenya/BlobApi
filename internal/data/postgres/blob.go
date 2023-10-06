@@ -12,8 +12,6 @@ type BlobModel struct {
 	DB *sql.DB
 }
 
-var _ data.BlobStorer = &BlobModel{} // Check that BlobModel implements the data.BlobStorer interface
-
 func (m *BlobModel) Insert(userID int, data string) (int, error) {
 	query := `
 	INSERT INTO my_table (user_id, data) 
@@ -111,3 +109,4 @@ func (m *BlobModel) Delete(id int) error {
 
 	return nil
 }
+
