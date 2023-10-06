@@ -92,4 +92,5 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 		ape.RenderErr(w, problems.InternalError())
 	}
 
+	ape.Render(w, &resp)
 }

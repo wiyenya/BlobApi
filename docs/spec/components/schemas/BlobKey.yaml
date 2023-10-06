@@ -4,9 +4,8 @@ required:
   - type
 properties:
   id:
-    type: integer
-    example: "2"
+    type: string
+    example: blah
   type:
     type: string
     description: blob type
-    example: asset_description

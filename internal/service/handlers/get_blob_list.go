@@ -31,7 +31,7 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Список для хранения преобразованных данных Blob
+	// List for storing converted data Blob
 	var responseData []BlobData
 	for _, blob := range blobs {
 		if blob == nil {
@@ -57,7 +57,7 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 		})
 	}
 
-	// Собираем и отправляем ответ
+	// Collect the response
 	resp := ListResponse{
 		Data: responseData,
 	}
@@ -72,4 +72,5 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 		ape.RenderErr(w, problems.InternalError())
 	}
 
+	ape.Render(w, &resp)
 }

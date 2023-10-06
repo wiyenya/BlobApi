@@ -37,12 +37,39 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Inserting a blob
-	_, err = h.Model.Insert(id, req.Attributes.Value)
+	id, err = h.Model.Insert(id, req.Attributes.Value)
 	if err != nil {
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
+	// Getting a blob to return the created resource
+	blob, err := h.Model.Get(id)
+	if err != nil {
+
+		Log(r).WithError(err).Error("error getting blob:")
+		ape.RenderErr(w, problems.InternalError())
+		return
+	}
+
+	// Wrap Blob in AttributeData and Response structures
+	response := Response{
+		Data: BlobData{
+			ID: strconv.Itoa(blob.ID), // Convert int ID to string
+			Attributes: BlobAttributes{
+				Value: blob.Data,
+			},
+			Relationships: BlobRelationships{
+				Owner: BlobOwner{
+					Data: OwnerData{
+						ID: strconv.Itoa(int(*blob.UserID)), // Convert int UserID to string
+					},
+				},
+			},
+		},
+	}
+
 	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
+	ape.Render(w, &response)
 }
