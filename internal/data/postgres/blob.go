@@ -15,12 +15,11 @@ type BlobModel struct {
 
 func (m *BlobModel) Insert(userID int, data map[string]interface{}) (int, error) {
 
-	// data to JSON
+	// data to JSON (map to bytes)
 	jsonData, err := json.Marshal(data)
 	if err != nil {
 		return 0, err
 	}
-	fmt.Println(jsonData)
 
 	query := `
 	INSERT INTO my_table (user_id, data) 
@@ -49,7 +48,7 @@ func (m *BlobModel) Insert(userID int, data map[string]interface{}) (int, error)
 	return id, nil
 }
 
-func (m *BlobModel) Get(id int) (*data.Blob, error) {
+func (m *BlobModel) Get(id int) (*data.Blob2, error) {
 
 	query := `
 	SELECT index, user_id, data
@@ -66,12 +65,22 @@ func (m *BlobModel) Get(id int) (*data.Blob, error) {
 		return nil, err
 	}
 
-	fmt.Println(b.Data)
+	// JSON to Data (bytes to map)
+	m1 := make(map[string]interface{})
+	err1 := json.Unmarshal(b.Data, &m1)
+	if err1 != nil {
+		return nil, err
+	}
 
-	return b, nil
+	blob := &data.Blob2{}
+	blob.ID = b.ID
+	blob.UserID = b.UserID
+	blob.Data = m1
+
+	return blob, nil
 }
 
-func (m *BlobModel) GetBlobList() ([]*data.Blob, error) {
+func (m *BlobModel) GetBlobList() ([]*data.Blob2, error) {
 	query := `
 	SELECT index, user_id, data
 	FROM my_table;
@@ -84,14 +93,28 @@ func (m *BlobModel) GetBlobList() ([]*data.Blob, error) {
 
 	defer rows.Close()
 
-	var blobs []*data.Blob
+	var blobs []*data.Blob2
 	for rows.Next() {
 		b := &data.Blob{}
 		err := rows.Scan(&b.ID, &b.UserID, &b.Data)
 		if err != nil {
 			return nil, err
 		}
-		blobs = append(blobs, b)
+
+		// JSON to Data (bytes to map)
+
+		m1 := make(map[string]interface{})
+		err1 := json.Unmarshal(b.Data, &m1)
+		if err1 != nil {
+			return nil, err
+		}
+
+		blob := &data.Blob2{}
+		blob.ID = b.ID
+		blob.UserID = b.UserID
+		blob.Data = m1
+
+		blobs = append(blobs, blob)
 	}
 
 	if err = rows.Err(); err != nil {

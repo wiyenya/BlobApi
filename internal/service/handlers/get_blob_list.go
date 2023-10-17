@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"strconv"
@@ -35,10 +34,6 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 	var responseData []BlobData
 	for _, blob := range blobs {
 
-		m := make(map[string]interface{})
-		err1 := json.Unmarshal(blob.Data, &m)
-		fmt.Println(err1)
-
 		if blob == nil {
 			fmt.Println("Warning: encountered nil blob")
 			continue
@@ -50,7 +45,7 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 		responseData = append(responseData, BlobData{
 			ID: strconv.Itoa(blob.ID),
 			Attributes: BlobAttributes{
-				Value: m,
+				Value: blob.Data,
 			},
 			Relationships: BlobRelationships{
 				Owner: BlobOwner{
