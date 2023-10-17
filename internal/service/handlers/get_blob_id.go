@@ -1,6 +1,8 @@
 package handlers
 
 import (
+	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -21,7 +23,7 @@ type BlobData struct {
 }
 
 type BlobAttributes struct {
-	Value string `json:"value"`
+	Value map[string]interface{} `json:"value"`
 }
 
 type BlobRelationships struct {
@@ -63,12 +65,15 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	m := make(map[string]interface{})
+	err1 := json.Unmarshal(blob.Data, &m)
+	fmt.Println(err1)
 	// Wrap Blob in AttributeData and Response structures
 	resp := Response{
 		Data: BlobData{
 			ID: strconv.Itoa(blob.ID), // Convert int ID to string
 			Attributes: BlobAttributes{
-				Value: blob.Data,
+				Value: m,
 			},
 			Relationships: BlobRelationships{
 				Owner: BlobOwner{

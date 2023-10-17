@@ -5,6 +5,6 @@
 package resources
 
 type BlobRequestAttributes struct {
-	// arbitrary text
-	Value string `json:"value"`
+	// arbitrary object
+	Value map[string]interface{} `json:"value"`
 }

@@ -2,6 +2,7 @@ package models
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 
@@ -12,7 +13,15 @@ type BlobModel struct {
 	DB *sql.DB
 }
 
-func (m *BlobModel) Insert(userID int, data string) (int, error) {
+func (m *BlobModel) Insert(userID int, data map[string]interface{}) (int, error) {
+
+	// data to JSON
+	jsonData, err := json.Marshal(data)
+	if err != nil {
+		return 0, err
+	}
+	fmt.Println(jsonData)
+
 	query := `
 	INSERT INTO my_table (user_id, data) 
 	VALUES ($1, $2)
@@ -20,8 +29,9 @@ func (m *BlobModel) Insert(userID int, data string) (int, error) {
 	`
 
 	var id int
-	res, err := m.DB.Exec(query, userID, data)
+	res, err := m.DB.Exec(query, userID, jsonData)
 	if err != nil {
+		fmt.Println(err)
 		return 0, err
 	}
 
@@ -40,6 +50,7 @@ func (m *BlobModel) Insert(userID int, data string) (int, error) {
 }
 
 func (m *BlobModel) Get(id int) (*data.Blob, error) {
+
 	query := `
 	SELECT index, user_id, data
 	FROM my_table
@@ -47,12 +58,15 @@ func (m *BlobModel) Get(id int) (*data.Blob, error) {
 	`
 
 	b := &data.Blob{}
+
 	err := m.DB.QueryRow(query, id).Scan(&b.ID, &b.UserID, &b.Data)
 	if err == sql.ErrNoRows {
 		return nil, errors.New("blob not found")
 	} else if err != nil {
 		return nil, err
 	}
+
+	fmt.Println(b.Data)
 
 	return b, nil
 }
@@ -109,4 +123,3 @@ func (m *BlobModel) Delete(id int) error {
 
 	return nil
 }
-
