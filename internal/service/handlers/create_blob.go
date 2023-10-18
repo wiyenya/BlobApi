@@ -1,7 +1,6 @@
 package handlers
 
 import (
-	"fmt"
 	"net/http"
 	"strconv"
 
@@ -41,7 +40,6 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 	// Inserting a blob
 	id, err = h.Model.Insert(id, req.Attributes.Value)
 	if err != nil {
-		fmt.Println(err)
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
@@ -59,14 +57,14 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 
 	response := Response{
 		Data: BlobData{
-			ID: strconv.Itoa(blob.ID), // Convert int ID to string
+			ID: strconv.Itoa(blob.Index), // Convert int ID to string
 			Attributes: BlobAttributes{
 				Value: blob.Data,
 			},
 			Relationships: BlobRelationships{
 				Owner: BlobOwner{
 					Data: OwnerData{
-						ID: strconv.Itoa(int(*blob.UserID)), // Convert int UserID to string
+						ID: strconv.Itoa(int(*blob.User_id)), // Convert int UserID to string
 					},
 				},
 			},

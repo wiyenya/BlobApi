@@ -6,8 +6,8 @@ import (
 
 	"github.com/go-chi/chi"
 	"gitlab.com/distributed_lab/ape"
+	"gitlab.com/distributed_lab/kit/pgdb"
 
-	"database/sql"
 	"log"
 
 	_ "github.com/lib/pq"
@@ -15,22 +15,23 @@ import (
 
 func (s *service) router() chi.Router {
 
-	// Initializing the database
-	connStr := "postgres://postgres:kate123@localhost:5432/mydatabase?sslmode=disable"
-	db, err := sql.Open("postgres", connStr)
+	// Создаем настройки подключения к базе данных
+	dbOpts := pgdb.Opts{
+		URL:                "postgres://postgres:kate123@localhost:5432/mydatabase?sslmode=disable",
+		MaxOpenConnections: 10,
+		MaxIdleConnections: 5,
+	}
+
+	// Открываем соединение с базой данных
+	db, err := pgdb.Open(dbOpts)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	err = db.Ping() // Ping the database to make sure the connection is established
-	if err != nil {
-		log.Fatal(err)
-	}
-
-	//	Create BlobModel instance
+	// Создаем экземпляр BlobModel, передавая ему db
 	BlobModel := &postgres.BlobModel{DB: db}
 
-	//	Create BlobHandler instance
+	// Создаем экземпляр BlobHandler, передавая ему BlobModel
 	handler := handlers.NewBlobHandler(BlobModel)
 
 	r := chi.NewRouter()
@@ -45,7 +46,7 @@ func (s *service) router() chi.Router {
 
 	r.Route("/integrations/blobs", func(r chi.Router) {
 		r.Post("/", handler.CreateBlob)
-		r.Get("/", handler.GetBlobList)
+		//r.Get("/", handler.GetBlobList)
 		r.Get("/{blob_id}", handler.GetBlobID)
 		r.Delete("/{blob_id}", handler.DeleteBlob)
 	})
