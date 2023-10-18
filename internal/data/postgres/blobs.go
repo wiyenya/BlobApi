@@ -4,7 +4,6 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
-	"fmt"
 
 	data "BlobApi/internal/data"
 
@@ -38,11 +37,8 @@ func (m *BlobModel) Insert(userID int, data map[string]interface{}) (int, error)
 	}
 
 	// Additional query for ID retrieval
-	//errQueryRow := m.DB.QueryRow("SELECT lastval();").Scan(&id)
 	errQueryRow := m.DB.Get(&id, insertBuilder)
 	if errQueryRow != nil {
-
-		fmt.Print(errQueryRow)
 		return 0, errQueryRow
 	}
 
@@ -81,80 +77,58 @@ func (m *BlobModel) Get(id int) (*data.Blob2, error) {
 	return Blob2, nil
 }
 
-// func (m *BlobModel) GetBlobList() ([]*data.Blob2, error) {
-// 	// Using Squirrel to build an SQL query
-// 	getBlobListBuilder := sq.Select("index", "user_id", "data").
-// 		From("my_table").
-// 		PlaceholderFormat(sq.Dollar)
+func (m *BlobModel) GetBlobList() ([]*data.Blob2, error) {
+	// Using Squirrel to build an SQL query
+	getBlobListBuilder := sq.Select("index", "user_id", "data").
+		From("my_table").
+		PlaceholderFormat(sq.Dollar)
 
-// 	query, _, errGetBlobListBuilder := getBlobListBuilder.ToSql()
-// 	if errGetBlobListBuilder != nil {
-// 		return nil, errGetBlobListBuilder
-// 	}
+	var blobs []*data.Blob
+	err := m.DB.Select(&blobs, getBlobListBuilder)
+	if err != nil {
+		return nil, err
+	}
 
-// 	rows, err := m.DB.Query(query)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	var blobs2 []*data.Blob2
+	for _, blob := range blobs {
+		m1 := make(map[string]interface{})
+		err1 := json.Unmarshal(blob.Data, &m1)
+		if err1 != nil {
+			return nil, err
+		}
 
-// 	defer rows.Close()
+		blob2 := &data.Blob2{}
+		blob2.Index = blob.Index
+		blob2.User_id = blob.User_id
+		blob2.Data = m1
 
-// 	var blobs []*data.Blob2
-// 	for rows.Next() {
-// 		b := &data.Blob{}
-// 		err := rows.Scan(&b.ID, &b.UserID, &b.Data)
-// 		if err != nil {
-// 			return nil, err
-// 		}
+		blobs2 = append(blobs2, blob2)
+	}
 
-// 		// JSON to Data (bytes to map)
+	return blobs2, nil
+}
 
-// 		m1 := make(map[string]interface{})
-// 		err1 := json.Unmarshal(b.Data, &m1)
-// 		if err1 != nil {
-// 			return nil, err
-// 		}
+func (m *BlobModel) Delete(id int) error {
 
-// 		blob := &data.Blob2{}
-// 		blob.ID = b.ID
-// 		blob.UserID = b.UserID
-// 		blob.Data = m1
+	// Using Squirrel to build an SQL query
+	deleteBuilder := sq.Delete("my_table").
+		Where(sq.Eq{"index": id}).
+		PlaceholderFormat(sq.Dollar)
 
-// 		blobs = append(blobs, blob)
-// 	}
+	result, err := m.DB.ExecWithResult(deleteBuilder)
+	if err != nil {
+		return err
+	}
 
-// 	if err = rows.Err(); err != nil {
-// 		return nil, err
-// 	}
+	// Check that at least one line has been deleted
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
 
-// 	return blobs, nil
-// }
+	if rowsAffected == 0 {
+		return errors.New("no rows affected, blob might not exist")
+	}
 
-// func (m *BlobModel) Delete(id int) error {
-
-// 	// Using Squirrel to build an SQL query
-// 	deleteBuilder := sq.Delete("my_table").
-// 		Where(sq.Eq{"index": id}).
-// 		PlaceholderFormat(sq.Dollar)
-
-// 	query, _, errDeleteBuilder := deleteBuilder.ToSql()
-// 	if errDeleteBuilder != nil {
-// 		return errDeleteBuilder
-// 	}
-
-// 	result, err := m.DB.Exec(query, id)
-// 	if err != nil {
-// 		return err
-// 	}
-
-// 	// Check that at least one line has been deleted
-// 	rowsAffected, err := result.RowsAffected()
-// 	if err != nil {
-// 		return err
-// 	}
-// 	if rowsAffected == 0 {
-// 		return errors.New("no rows affected, blob might not exist")
-// 	}
-
-// 	return nil
-// }
+	return nil
+}

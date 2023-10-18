@@ -15,23 +15,23 @@ import (
 
 func (s *service) router() chi.Router {
 
-	// Создаем настройки подключения к базе данных
+	// Create database connection settings
 	dbOpts := pgdb.Opts{
 		URL:                "postgres://postgres:kate123@localhost:5432/mydatabase?sslmode=disable",
 		MaxOpenConnections: 10,
 		MaxIdleConnections: 5,
 	}
 
-	// Открываем соединение с базой данных
+	// Open a connection to the database
 	db, err := pgdb.Open(dbOpts)
 	if err != nil {
 		log.Fatal(err)
 	}
 
-	// Создаем экземпляр BlobModel, передавая ему db
+	// Create an instance of BlobModel by passing db to it
 	BlobModel := &postgres.BlobModel{DB: db}
 
-	// Создаем экземпляр BlobHandler, передавая ему BlobModel
+	// Create an instance of BlobHandler by passing it a BlobModel
 	handler := handlers.NewBlobHandler(BlobModel)
 
 	r := chi.NewRouter()
@@ -46,7 +46,7 @@ func (s *service) router() chi.Router {
 
 	r.Route("/integrations/blobs", func(r chi.Router) {
 		r.Post("/", handler.CreateBlob)
-		//r.Get("/", handler.GetBlobList)
+		r.Get("/", handler.GetBlobList)
 		r.Get("/{blob_id}", handler.GetBlobID)
 		r.Delete("/{blob_id}", handler.DeleteBlob)
 	})
