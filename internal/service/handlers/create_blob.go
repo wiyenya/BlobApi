@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 	"strconv"
 
@@ -40,6 +41,7 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 	// Inserting a blob
 	id, err = h.Model.Insert(id, req.Attributes.Value)
 	if err != nil {
+		fmt.Println(err)
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}

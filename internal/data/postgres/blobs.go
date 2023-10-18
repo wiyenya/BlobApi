@@ -1,4 +1,4 @@
-package models
+package postgres
 
 import (
 	"database/sql"
@@ -7,6 +7,8 @@ import (
 	"fmt"
 
 	data "BlobApi/internal/data"
+
+	"github.com/Masterminds/squirrel"
 )
 
 type BlobModel struct {
@@ -16,19 +18,25 @@ type BlobModel struct {
 func (m *BlobModel) Insert(userID int, data map[string]interface{}) (int, error) {
 
 	// data to JSON (map to bytes)
-	jsonData, err := json.Marshal(data)
+	jsonData, err1 := json.Marshal(data)
+	if err1 != nil {
+		return 0, err1
+	}
+
+	// Using Squirrel to build an SQL query
+	insertBuilder := squirrel.Insert("my_table").
+		Columns("user_id", "data").
+		Values(userID, jsonData).
+		Suffix("RETURNING index").
+		PlaceholderFormat(squirrel.Dollar)
+
+	query, args, err := insertBuilder.ToSql()
 	if err != nil {
 		return 0, err
 	}
 
-	query := `
-	INSERT INTO my_table (user_id, data) 
-	VALUES ($1, $2)
-	RETURNING index;
-	`
-
 	var id int
-	res, err := m.DB.Exec(query, userID, jsonData)
+	res, err := m.DB.Exec(query, args...)
 	if err != nil {
 		fmt.Println(err)
 		return 0, err
