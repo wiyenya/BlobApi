@@ -8,7 +8,7 @@ import (
 
 	data "BlobApi/internal/data"
 
-	"github.com/Masterminds/squirrel"
+	sq "github.com/Masterminds/squirrel"
 )
 
 type BlobModel struct {
@@ -18,39 +18,39 @@ type BlobModel struct {
 func (m *BlobModel) Insert(userID int, data map[string]interface{}) (int, error) {
 
 	// data to JSON (map to bytes)
-	jsonData, err1 := json.Marshal(data)
-	if err1 != nil {
-		return 0, err1
+	jsonData, errMarshal := json.Marshal(data)
+	if errMarshal != nil {
+		return 0, errMarshal
 	}
 
 	// Using Squirrel to build an SQL query
-	insertBuilder := squirrel.Insert("my_table").
+	insertBuilder := sq.Insert("my_table").
 		Columns("user_id", "data").
 		Values(userID, jsonData).
 		Suffix("RETURNING index").
-		PlaceholderFormat(squirrel.Dollar)
+		PlaceholderFormat(sq.Dollar)
 
-	query, args, err := insertBuilder.ToSql()
-	if err != nil {
-		return 0, err
+	query, args, errInsertBuilder := insertBuilder.ToSql()
+	if errInsertBuilder != nil {
+		return 0, errInsertBuilder
 	}
 
 	var id int
-	res, err := m.DB.Exec(query, args...)
-	if err != nil {
-		fmt.Println(err)
-		return 0, err
+	res, errExec := m.DB.Exec(query, args...)
+	if errExec != nil {
+		fmt.Println(errExec)
+		return 0, errExec
 	}
 
-	if cnt, err := res.RowsAffected(); err != nil || cnt != 1 {
+	if cnt, errRowsAffected := res.RowsAffected(); errRowsAffected != nil || cnt != 1 {
 		// Handling an error or situation when the number of affected rows is not equal to the expected number of rows
 		return 0, fmt.Errorf("unexpected number of affected rows: %d", cnt)
 	}
 
 	// Additional query for ID retrieval
-	err = m.DB.QueryRow("SELECT lastval();").Scan(&id)
-	if err != nil {
-		return 0, err
+	errQueryRow := m.DB.QueryRow("SELECT lastval();").Scan(&id)
+	if errQueryRow != nil {
+		return 0, errQueryRow
 	}
 
 	return id, nil
@@ -58,26 +58,31 @@ func (m *BlobModel) Insert(userID int, data map[string]interface{}) (int, error)
 
 func (m *BlobModel) Get(id int) (*data.Blob2, error) {
 
-	query := `
-	SELECT index, user_id, data
-	FROM my_table
-	WHERE index = $1;
-	`
+	// Using Squirrel to build an SQL query
+	getBuilder := sq.Select("index", "user_id", "data").
+		From("my_table").
+		Where(sq.Eq{"index": id}).
+		PlaceholderFormat(sq.Dollar)
+
+	query, args, errGetBuilder := getBuilder.ToSql()
+	if errGetBuilder != nil {
+		return nil, errGetBuilder
+	}
 
 	b := &data.Blob{}
 
-	err := m.DB.QueryRow(query, id).Scan(&b.ID, &b.UserID, &b.Data)
-	if err == sql.ErrNoRows {
+	errQueryRow := m.DB.QueryRow(query, args...).Scan(&b.ID, &b.UserID, &b.Data)
+	if errQueryRow == sql.ErrNoRows {
 		return nil, errors.New("blob not found")
-	} else if err != nil {
-		return nil, err
+	} else if errQueryRow != nil {
+		return nil, errQueryRow
 	}
 
 	// JSON to Data (bytes to map)
 	m1 := make(map[string]interface{})
-	err1 := json.Unmarshal(b.Data, &m1)
-	if err1 != nil {
-		return nil, err
+	errUnmarshal := json.Unmarshal(b.Data, &m1)
+	if errUnmarshal != nil {
+		return nil, errUnmarshal
 	}
 
 	blob := &data.Blob2{}
@@ -89,10 +94,15 @@ func (m *BlobModel) Get(id int) (*data.Blob2, error) {
 }
 
 func (m *BlobModel) GetBlobList() ([]*data.Blob2, error) {
-	query := `
-	SELECT index, user_id, data
-	FROM my_table;
-	`
+	// Using Squirrel to build an SQL query
+	getBlobListBuilder := sq.Select("index", "user_id", "data").
+		From("my_table").
+		PlaceholderFormat(sq.Dollar)
+
+	query, _, errGetBlobListBuilder := getBlobListBuilder.ToSql()
+	if errGetBlobListBuilder != nil {
+		return nil, errGetBlobListBuilder
+	}
 
 	rows, err := m.DB.Query(query)
 	if err != nil {
@@ -133,10 +143,16 @@ func (m *BlobModel) GetBlobList() ([]*data.Blob2, error) {
 }
 
 func (m *BlobModel) Delete(id int) error {
-	query := `
-	DELETE FROM my_table
-	WHERE index = $1;
-	`
+
+	// Using Squirrel to build an SQL query
+	deleteBuilder := sq.Delete("my_table").
+		Where(sq.Eq{"index": id}).
+		PlaceholderFormat(sq.Dollar)
+
+	query, _, errDeleteBuilder := deleteBuilder.ToSql()
+	if errDeleteBuilder != nil {
+		return errDeleteBuilder
+	}
 
 	result, err := m.DB.Exec(query, id)
 	if err != nil {
