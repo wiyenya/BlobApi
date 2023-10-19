@@ -1,9 +1,12 @@
+config:
+  database_url: postgres://postgres:kate123@localhost:5432/mydatabase?sslmode=disable
+
 log:
   level: debug
   disable_sentry: true
 
-db:
-  url: postgres://postgres:kate123@localhost:5432/mydatabase?sslmode=disable
+# db:
+#   url: postgres://postgres:kate123@localhost:5432/mydatabase?sslmode=disable
 
 listener:
   addr: :8080

@@ -11,13 +11,40 @@ import (
 	"log"
 
 	_ "github.com/lib/pq"
+
+
+	"gitlab.com/distributed_lab/figure"
+	"github.com/spf13/viper"
 )
+
+type Config struct {
+	DatabaseURL string `fig:"database_url,required"`
+}
+
+func NewConfig(filePath string) (*Config, error) {
+	v := viper.New()
+	v.SetConfigFile(filePath)
+	if err := v.ReadInConfig(); err != nil {
+		return nil, err
+	}
+
+	cfg := &Config{}
+	err := figure.Out(cfg).From(v.AllSettings()).Please()
+	if err != nil {
+		return nil, err
+	}
+	return cfg, nil
+}
 
 func (s *service) router() chi.Router {
 
-	// Create database connection settings
+	cfg, err := NewConfig("../../config.yaml")
+	if err != nil {
+		log.Fatalf("Failed to load config: %v", err)
+	}
+
 	dbOpts := pgdb.Opts{
-		URL:                "postgres://postgres:kate123@localhost:5432/mydatabase?sslmode=disable",
+		URL:                cfg.DatabaseURL,
 		MaxOpenConnections: 10,
 		MaxIdleConnections: 5,
 	}
