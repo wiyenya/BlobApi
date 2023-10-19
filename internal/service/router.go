@@ -1,6 +1,8 @@
 package service
 
 import (
+	"os"
+	"errors"
 	postgres "BlobApi/internal/data/postgres"
 	"BlobApi/internal/service/handlers"
 
@@ -18,12 +20,23 @@ import (
 )
 
 type Config struct {
-	DatabaseURL string `fig:"database_url,required"`
+    DBConfig struct {
+        DatabaseURL string `fig:"database_url,required"`
+    } `fig:"config"`
 }
 
-func NewConfig(filePath string) (*Config, error) {
+
+func NewConfig() (*Config, error) {
 	v := viper.New()
-	v.SetConfigFile(filePath)
+
+	// Read the value of the environment variable
+	configPath := os.Getenv("KV_VIPER_FILE")
+	if configPath == "" {
+		return nil, errors.New("environment variable KV_VIPER_FILE is not set")
+	}
+
+	v.SetConfigFile(configPath)
+
 	if err := v.ReadInConfig(); err != nil {
 		return nil, err
 	}
@@ -36,15 +49,16 @@ func NewConfig(filePath string) (*Config, error) {
 	return cfg, nil
 }
 
+
 func (s *service) router() chi.Router {
 
-	cfg, err := NewConfig("../../config.yaml")
+	cfg, err := NewConfig()
 	if err != nil {
 		log.Fatalf("Failed to load config: %v", err)
 	}
 
 	dbOpts := pgdb.Opts{
-		URL:                cfg.DatabaseURL,
+		URL:                cfg.DBConfig.DatabaseURL,
 		MaxOpenConnections: 10,
 		MaxIdleConnections: 5,
 	}
