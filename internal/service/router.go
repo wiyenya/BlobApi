@@ -1,30 +1,31 @@
 package service
 
 import (
-	"os"
-	"errors"
 	postgres "BlobApi/internal/data/postgres"
 	"BlobApi/internal/service/handlers"
+	middleware "BlobApi/internal/service/middleware"
+	"errors"
+	"os"
+	"time"
 
 	"github.com/go-chi/chi"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/kit/pgdb"
+	"gitlab.com/distributed_lab/logan/v3"
 
 	"log"
 
 	_ "github.com/lib/pq"
 
-
-	"gitlab.com/distributed_lab/figure"
 	"github.com/spf13/viper"
+	"gitlab.com/distributed_lab/figure"
 )
 
 type Config struct {
-    DBConfig struct {
-        DatabaseURL string `fig:"database_url,required"`
-    } `fig:"config"`
+	DBConfig struct {
+		DatabaseURL string `fig:"database_url,required"`
+	} `fig:"config"`
 }
-
 
 func NewConfig() (*Config, error) {
 	v := viper.New()
@@ -49,8 +50,7 @@ func NewConfig() (*Config, error) {
 	return cfg, nil
 }
 
-
-func (s *service) router() chi.Router {
+func (s *service) router(entry *logan.Entry) chi.Router {
 
 	cfg, err := NewConfig()
 	if err != nil {
@@ -83,6 +83,7 @@ func (s *service) router() chi.Router {
 		ape.CtxMiddleware(
 			handlers.CtxLog(s.log),
 		),
+		middleware.Logger(entry, 300*time.Millisecond),
 	)
 
 	r.Route("/integrations/blobs", func(r chi.Router) {

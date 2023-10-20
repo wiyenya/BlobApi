@@ -3,7 +3,6 @@ package handlers
 import (
 	"fmt"
 	"net/http"
-	"strconv"
 
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
@@ -43,14 +42,14 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 			continue
 		}
 		responseData = append(responseData, BlobData{
-			ID: strconv.Itoa(blob.Index),
+			ID: blob.Index,
 			Attributes: BlobAttributes{
 				Value: blob.Data,
 			},
 			Relationships: BlobRelationships{
 				Owner: BlobOwner{
 					Data: OwnerData{
-						ID: strconv.Itoa(int(*blob.User_id)),
+						ID: *blob.User_id,
 					},
 				},
 			},
@@ -62,7 +61,5 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 		Data: responseData,
 	}
 
-	// Content-Type header for the response
-	w.Header().Set("Content-Type", "application/json")
 	ape.Render(w, &resp)
 }

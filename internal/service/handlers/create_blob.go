@@ -57,21 +57,20 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 
 	response := Response{
 		Data: BlobData{
-			ID: strconv.Itoa(blob.Index), // Convert int ID to string
+			ID: blob.Index, // Convert int ID to string
 			Attributes: BlobAttributes{
 				Value: blob.Data,
 			},
 			Relationships: BlobRelationships{
 				Owner: BlobOwner{
 					Data: OwnerData{
-						ID: strconv.Itoa(int(*blob.User_id)), // Convert int UserID to string
+						ID: *blob.User_id, // Convert int UserID to string
 					},
 				},
 			},
 		},
 	}
 
-	w.Header().Set("Content-Type", "application/json")
 	w.WriteHeader(http.StatusCreated)
 	ape.Render(w, &response)
 }

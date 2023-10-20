@@ -2,7 +2,6 @@ package handlers
 
 import (
 	"net/http"
-	"strconv"
 
 	requests "BlobApi/internal/service/requests"
 
@@ -15,7 +14,7 @@ type Response struct {
 }
 
 type BlobData struct {
-	ID            string            `json:"id"`
+	ID            int               `json:"id"`
 	Attributes    BlobAttributes    `json:"attributes"`
 	Relationships BlobRelationships `json:"relationships"`
 }
@@ -33,7 +32,7 @@ type BlobOwner struct {
 }
 
 type OwnerData struct {
-	ID string `json:"id"`
+	ID int32 `json:"id"`
 }
 
 func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
@@ -66,22 +65,19 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 	// Wrap Blob in AttributeData and Response structures
 	resp := Response{
 		Data: BlobData{
-			ID: strconv.Itoa(blob.Index), // Convert int ID to string
+			ID: blob.Index, // Convert int ID to string
 			Attributes: BlobAttributes{
 				Value: blob.Data,
 			},
 			Relationships: BlobRelationships{
 				Owner: BlobOwner{
 					Data: OwnerData{
-						ID: strconv.Itoa(int(*blob.User_id)), // Convert int UserID to string
+						ID: *blob.User_id, // Convert int UserID to string
 					},
 				},
 			},
 		},
 	}
-
-	// Content-Type header for the response
-	w.Header().Set("Content-Type", "application/json")
 
 	ape.Render(w, &resp)
 }

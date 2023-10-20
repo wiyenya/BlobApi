@@ -9,10 +9,6 @@ import (
 	"gitlab.com/distributed_lab/kit/copus/types"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	//"BlobApi/internal/service/middlewares"
-	//"github.com/wiyenya/BlobApi/tree/main/internal/service/handlers"
-	// "gitlab.com/tokend/api/internal/api/handlers"
-	// "gitlab.com/tokend/api/internal/api/middlewares"
 )
 
 type service struct {
@@ -23,7 +19,7 @@ type service struct {
 
 func (s *service) run() error {
 	s.log.Info("Service started")
-	r := s.router()
+	r := s.router(s.log)
 
 	if err := s.copus.RegisterChi(r); err != nil {
 		return errors.Wrap(err, "cop failed")
