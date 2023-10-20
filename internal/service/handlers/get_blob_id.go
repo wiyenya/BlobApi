@@ -65,14 +65,14 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 	// Wrap Blob in AttributeData and Response structures
 	resp := Response{
 		Data: BlobData{
-			ID: blob.Index, // Convert int ID to string
+			ID: blob.Index,
 			Attributes: BlobAttributes{
 				Value: blob.Data,
 			},
 			Relationships: BlobRelationships{
 				Owner: BlobOwner{
 					Data: OwnerData{
-						ID: *blob.User_id, // Convert int UserID to string
+						ID: *blob.User_id,
 					},
 				},
 			},

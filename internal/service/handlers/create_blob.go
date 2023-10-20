@@ -57,14 +57,14 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 
 	response := Response{
 		Data: BlobData{
-			ID: blob.Index, // Convert int ID to string
+			ID: blob.Index,
 			Attributes: BlobAttributes{
 				Value: blob.Data,
 			},
 			Relationships: BlobRelationships{
 				Owner: BlobOwner{
 					Data: OwnerData{
-						ID: *blob.User_id, // Convert int UserID to string
+						ID: *blob.User_id,
 					},
 				},
 			},
