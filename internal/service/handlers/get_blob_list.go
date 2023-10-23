@@ -1,16 +1,13 @@
 package handlers
 
 import (
+	resources "BlobApi/resources"
 	"fmt"
 	"net/http"
 
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 )
-
-type ListResponse struct {
-	Data []BlobData `json:"data"`
-}
 
 func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 
@@ -30,7 +27,7 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// List for storing converted data Blob
-	var responseData []BlobData
+	var responseData []resources.Blob
 	for _, blob := range blobs {
 
 		if blob == nil {
@@ -41,23 +38,22 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 			fmt.Println("Warning: UserID is nil for blob ID:", blob.Index)
 			continue
 		}
-		responseData = append(responseData, BlobData{
-			ID: blob.Index,
-			Attributes: BlobAttributes{
-				Value: blob.Data,
+		responseData = append(responseData, resources.Blob{
+			Key: resources.Key{
+				ID:           fmt.Sprint(blob.Index),
+				ResourceType: "Blob",
 			},
-			Relationships: BlobRelationships{
-				Owner: BlobOwner{
-					Data: OwnerData{
-						ID: *blob.User_id,
-					},
-				},
+			Attributes: resources.BlobAttributes{
+				Obj: blob.Data,
+			},
+			Relationships: &resources.BlobRelationships{
+				UserId: *blob.User_id,
 			},
 		})
 	}
 
 	// Collect the response
-	resp := ListResponse{
+	resp := resources.BlobListResponse{
 		Data: responseData,
 	}
 

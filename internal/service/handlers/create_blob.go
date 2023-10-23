@@ -1,14 +1,15 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
-	"strconv"
 
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 
 	postgres "BlobApi/internal/data/postgres"
 	requests "BlobApi/internal/service/requests"
+	resources "BlobApi/resources"
 )
 
 type BlobHandler struct {
@@ -29,23 +30,17 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Converting string ID to int
-	id, err := strconv.Atoi(req.Relationships.Owner.Data.ID)
-	if err != nil {
-		Log(r).WithError(err).Error("Invalid ID format:")
-		ape.RenderErr(w, problems.BadRequest(err)...)
-		return
-	}
+	id := req.Relationships.UserId
 
 	// Inserting a blob
-	id, err = h.Model.Insert(id, req.Attributes.Value)
+	blobId, err := h.Model.Insert(id, req.Attributes.Value)
 	if err != nil {
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
 	// Getting a blob to return the created resource
-	blob, err := h.Model.Get(id)
+	blob, err := h.Model.Get(blobId)
 	if err != nil {
 
 		Log(r).WithError(err).Error("error getting blob:")
@@ -55,18 +50,17 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 
 	// Wrap Blob in AttributeData and Response structures
 
-	response := Response{
-		Data: BlobData{
-			ID: blob.Index,
-			Attributes: BlobAttributes{
-				Value: blob.Data,
+	response := resources.BlobResponse{
+		Data: resources.Blob{
+			Key: resources.Key{
+				ID:           fmt.Sprint(blob.Index),
+				ResourceType: "Blob",
 			},
-			Relationships: BlobRelationships{
-				Owner: BlobOwner{
-					Data: OwnerData{
-						ID: *blob.User_id,
-					},
-				},
+			Attributes: resources.BlobAttributes{
+				Obj: blob.Data,
+			},
+			Relationships: &resources.BlobRelationships{
+				UserId: *blob.User_id,
 			},
 		},
 	}

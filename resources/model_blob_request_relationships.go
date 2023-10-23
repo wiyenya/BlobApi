@@ -5,5 +5,6 @@
 package resources
 
 type BlobRequestRelationships struct {
-	Owner Relation `json:"owner"`
+	// blob id
+	UserId int32 `json:"user_id"`
 }

@@ -4,7 +4,7 @@
 
 package resources
 
-type BlobRequestAttributes struct {
-	// object
-	Value map[string]interface{} `json:"value"`
+type BlobRelationships struct {
+	// blob id
+	UserId int32 `json:"user_id"`
 }

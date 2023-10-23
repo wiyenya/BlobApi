@@ -9,3 +9,5 @@ properties:
   type:
     type: string
     description: blob type
+    example: asset_description
+

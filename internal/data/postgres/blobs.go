@@ -15,7 +15,7 @@ type BlobModel struct {
 	DB *pgdb.DB
 }
 
-func (m *BlobModel) Insert(userID int, data map[string]interface{}) (int, error) {
+func (m *BlobModel) Insert(userID int32, data map[string]interface{}) (int, error) {
 
 	//data to JSON (map to bytes)
 	jsonData, errMarshal := json.Marshal(data)
@@ -30,16 +30,12 @@ func (m *BlobModel) Insert(userID int, data map[string]interface{}) (int, error)
 		Suffix("RETURNING index").
 		PlaceholderFormat(sq.Dollar)
 
-	var id int
-	errExec := m.DB.Exec(insertBuilder)
-	if errExec != nil {
-		return 0, errExec
-	}
+	//insertBuilder - adds to the database, id - get the id
 
-	// Additional query for ID retrieval
-	errQueryRow := m.DB.Get(&id, insertBuilder)
-	if errQueryRow != nil {
-		return 0, errQueryRow
+	var id int
+	errGet := m.DB.Get(&id, insertBuilder)
+	if errGet != nil {
+		return 0, errGet
 	}
 
 	return id, nil

@@ -7,28 +7,25 @@ allOf:
     properties:
       attributes:
         type: object
+        required:
+          - value
         properties:
           value:
-            description: arbitrary object
+            description: object
             type: object
             example: {
                 "field1": "hello",
                 "test": "2"
               }
-        required:
-          - value
       relationships:
         type: object
         required:
-          - owner
+          - user_id
         properties:
-          owner:
-            description: blob owner
-            type: object
-            properties:
-              data:
-                type: object
-                $ref: '#/components/schemas/OwnerKey'
+          user_id:
+            description: blob id
+            type: integer
 
+              
 
 

@@ -4,6 +4,7 @@ import (
 	postgres "BlobApi/internal/data/postgres"
 	"BlobApi/internal/service/handlers"
 	middleware "BlobApi/internal/service/middleware"
+
 	"errors"
 	"os"
 	"time"
@@ -14,8 +15,6 @@ import (
 	"gitlab.com/distributed_lab/logan/v3"
 
 	"log"
-
-	_ "github.com/lib/pq"
 
 	"github.com/spf13/viper"
 	"gitlab.com/distributed_lab/figure"

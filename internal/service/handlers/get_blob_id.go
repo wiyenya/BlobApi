@@ -1,39 +1,16 @@
 package handlers
 
 import (
+	"fmt"
 	"net/http"
 
 	requests "BlobApi/internal/service/requests"
 
+	resources "BlobApi/resources"
+
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 )
-
-type Response struct {
-	Data BlobData `json:"data"`
-}
-
-type BlobData struct {
-	ID            int               `json:"id"`
-	Attributes    BlobAttributes    `json:"attributes"`
-	Relationships BlobRelationships `json:"relationships"`
-}
-
-type BlobAttributes struct {
-	Value map[string]interface{} `json:"value"`
-}
-
-type BlobRelationships struct {
-	Owner BlobOwner `json:"owner"`
-}
-
-type BlobOwner struct {
-	Data OwnerData `json:"data"`
-}
-
-type OwnerData struct {
-	ID int32 `json:"id"`
-}
 
 func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 
@@ -63,18 +40,17 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Wrap Blob in AttributeData and Response structures
-	resp := Response{
-		Data: BlobData{
-			ID: blob.Index,
-			Attributes: BlobAttributes{
-				Value: blob.Data,
+	resp := resources.BlobResponse{
+		Data: resources.Blob{
+			Key: resources.Key{
+				ID:           fmt.Sprint(blob.Index),
+				ResourceType: "Blob",
 			},
-			Relationships: BlobRelationships{
-				Owner: BlobOwner{
-					Data: OwnerData{
-						ID: *blob.User_id,
-					},
-				},
+			Attributes: resources.BlobAttributes{
+				Obj: blob.Data,
+			},
+			Relationships: &resources.BlobRelationships{
+				UserId: *blob.User_id,
 			},
 		},
 	}

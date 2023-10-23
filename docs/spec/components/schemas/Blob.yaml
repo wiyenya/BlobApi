@@ -6,11 +6,24 @@ allOf:
     properties:
       attributes:
         type: object
-        format: json.RawMessage
-        properties:
-          value:
-            description: arbitrary text
-            type: string
-            example: "foobar"
         required:
-          - value
+          - obj
+        properties:
+          obj:
+            description: object
+            type: object
+            example: {
+                "field1": "hello",
+                "test": "2"
+              }
+      relationships:
+        type: object
+        required:
+          - user_id
+        properties:
+          user_id:
+            description: blob id
+            type: integer
+            example: "23"
+
+
