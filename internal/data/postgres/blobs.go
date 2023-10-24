@@ -7,6 +7,7 @@ import (
 	data "BlobApi/internal/data"
 
 	sq "github.com/Masterminds/squirrel"
+	"github.com/jmoiron/sqlx/types"
 	"gitlab.com/distributed_lab/kit/pgdb"
 )
 
@@ -14,7 +15,7 @@ type BlobModel struct {
 	DB *pgdb.DB
 }
 
-func (m *BlobModel) Insert(userID int32, data []byte) (int, error) {
+func (m *BlobModel) Insert(userID int32, data types.JSONText) (int, error) {
 
 	// Using Squirrel to build an SQL query
 	insertBuilder := sq.Insert("my_table").

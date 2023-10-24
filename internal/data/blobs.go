@@ -1,9 +1,11 @@
 package data
 
+import "github.com/jmoiron/sqlx/types"
+
 type Blob struct {
-	Index  int64  `db:"index"`
-	UserId *int32 `db:"user_id" json:"user_id"`
-	Data   []byte `db:"data" json:"data"`
+	Index  int64          `db:"index"`
+	UserId *int32         `db:"user_id" json:"user_id"`
+	Data   types.JSONText `db:"data" json:"data"`
 }
 
 type Blobs interface {
