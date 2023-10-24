@@ -28,15 +28,15 @@ func (_m *Blobs) Delete(id int) error {
 }
 
 // Get provides a mock function with given fields: id
-func (_m *Blobs) Get(id int) (*data.Blob2, error) {
+func (_m *Blobs) Get(id int) (*data.Blob, error) {
 	ret := _m.Called(id)
 
-	var r0 *data.Blob2
-	if rf, ok := ret.Get(0).(func(int) *data.Blob2); ok {
+	var r0 *data.Blob
+	if rf, ok := ret.Get(0).(func(int) *data.Blob); ok {
 		r0 = rf(id)
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).(*data.Blob2)
+			r0 = ret.Get(0).(*data.Blob)
 		}
 	}
 
@@ -51,15 +51,15 @@ func (_m *Blobs) Get(id int) (*data.Blob2, error) {
 }
 
 // GetBlobList provides a mock function with given fields:
-func (_m *Blobs) GetBlobList() ([]*data.Blob2, error) {
+func (_m *Blobs) GetBlobList() ([]*data.Blob, error) {
 	ret := _m.Called()
 
-	var r0 []*data.Blob2
-	if rf, ok := ret.Get(0).(func() []*data.Blob2); ok {
+	var r0 []*data.Blob
+	if rf, ok := ret.Get(0).(func() []*data.Blob); ok {
 		r0 = rf()
 	} else {
 		if ret.Get(0) != nil {
-			r0 = ret.Get(0).([]*data.Blob2)
+			r0 = ret.Get(0).([]*data.Blob)
 		}
 	}
 

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -23,7 +24,7 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Retrieve record by ID
+	//Retrieve record by ID
 	blob, err := h.Model.Get(id)
 	if err != nil {
 
@@ -40,6 +41,13 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Wrap Blob in AttributeData and Response structures
+
+	BlobDataUnmarshal := make(map[string]interface{})
+	errUnmarshal := json.Unmarshal(blob.Data, &BlobDataUnmarshal)
+	if errUnmarshal != nil {
+		return
+	}
+
 	resp := resources.BlobResponse{
 		Data: resources.Blob{
 			Key: resources.Key{
@@ -47,10 +55,10 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 				ResourceType: "Blob",
 			},
 			Attributes: resources.BlobAttributes{
-				Obj: blob.Data,
+				Obj: BlobDataUnmarshal,
 			},
 			Relationships: &resources.BlobRelationships{
-				UserId: *blob.User_id,
+				UserId: *blob.UserId,
 			},
 		},
 	}

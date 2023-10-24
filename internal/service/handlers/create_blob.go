@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -32,14 +33,20 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 
 	id := req.Relationships.UserId
 
+	//data to JSON (map to bytes)
+	jsonData, errMarshal := json.Marshal(req.Attributes.Value)
+	if errMarshal != nil {
+		return
+	}
+
 	// Inserting a blob
-	blobId, err := h.Model.Insert(id, req.Attributes.Value)
+	blobId, err := h.Model.Insert(id, jsonData)
 	if err != nil {
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
-	// Getting a blob to return the created resource
+	//Getting a blob to return the created resource
 	blob, err := h.Model.Get(blobId)
 	if err != nil {
 
@@ -48,7 +55,13 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	// Wrap Blob in AttributeData and Response structures
+	//Wrap Blob in AttributeData and Response structures
+
+	BlobDataUnmarshal := make(map[string]interface{})
+	errUnmarshal := json.Unmarshal(blob.Data, &BlobDataUnmarshal)
+	if errUnmarshal != nil {
+		return
+	}
 
 	response := resources.BlobResponse{
 		Data: resources.Blob{
@@ -57,10 +70,10 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 				ResourceType: "Blob",
 			},
 			Attributes: resources.BlobAttributes{
-				Obj: blob.Data,
+				Obj: BlobDataUnmarshal,
 			},
 			Relationships: &resources.BlobRelationships{
-				UserId: *blob.User_id,
+				UserId: *blob.UserId,
 			},
 		},
 	}

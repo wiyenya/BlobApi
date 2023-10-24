@@ -2,6 +2,7 @@ package handlers
 
 import (
 	resources "BlobApi/resources"
+	"encoding/json"
 	"fmt"
 	"net/http"
 
@@ -30,11 +31,17 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 	var responseData []resources.Blob
 	for _, blob := range blobs {
 
+		BlobDataUnmarshal := make(map[string]interface{})
+		errUnmarshal := json.Unmarshal(blob.Data, &BlobDataUnmarshal)
+		if errUnmarshal != nil {
+			return
+		}
+
 		if blob == nil {
 			fmt.Println("Warning: encountered nil blob")
 			continue
 		}
-		if blob.User_id == nil {
+		if blob.UserId == nil {
 			fmt.Println("Warning: UserID is nil for blob ID:", blob.Index)
 			continue
 		}
@@ -44,10 +51,10 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 				ResourceType: "Blob",
 			},
 			Attributes: resources.BlobAttributes{
-				Obj: blob.Data,
+				Obj: BlobDataUnmarshal,
 			},
 			Relationships: &resources.BlobRelationships{
-				UserId: *blob.User_id,
+				UserId: *blob.UserId,
 			},
 		})
 	}

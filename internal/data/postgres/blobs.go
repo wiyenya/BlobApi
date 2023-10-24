@@ -2,7 +2,6 @@ package postgres
 
 import (
 	"database/sql"
-	"encoding/json"
 	"errors"
 
 	data "BlobApi/internal/data"
@@ -15,18 +14,12 @@ type BlobModel struct {
 	DB *pgdb.DB
 }
 
-func (m *BlobModel) Insert(userID int32, data map[string]interface{}) (int, error) {
-
-	//data to JSON (map to bytes)
-	jsonData, errMarshal := json.Marshal(data)
-	if errMarshal != nil {
-		return 0, errMarshal
-	}
+func (m *BlobModel) Insert(userID int32, data []byte) (int, error) {
 
 	// Using Squirrel to build an SQL query
 	insertBuilder := sq.Insert("my_table").
 		Columns("user_id", "data").
-		Values(userID, jsonData).
+		Values(userID, data).
 		Suffix("RETURNING index").
 		PlaceholderFormat(sq.Dollar)
 
@@ -41,7 +34,7 @@ func (m *BlobModel) Insert(userID int32, data map[string]interface{}) (int, erro
 	return id, nil
 }
 
-func (m *BlobModel) Get(id int) (*data.Blob2, error) {
+func (m *BlobModel) Get(id int) (*data.Blob, error) {
 
 	// Using Squirrel to build an SQL query
 	getBuilder := sq.Select("index", "user_id", "data").
@@ -58,22 +51,10 @@ func (m *BlobModel) Get(id int) (*data.Blob2, error) {
 		return nil, errQueryRow
 	}
 
-	//JSON to Data (bytes to map)
-	m1 := make(map[string]interface{})
-	errUnmarshal := json.Unmarshal(blob.Data, &m1)
-	if errUnmarshal != nil {
-		return nil, errUnmarshal
-	}
-
-	Blob2 := &data.Blob2{}
-	Blob2.Index = blob.Index
-	Blob2.User_id = blob.User_id
-	Blob2.Data = m1
-
-	return Blob2, nil
+	return &blob, nil
 }
 
-func (m *BlobModel) GetBlobList() ([]*data.Blob2, error) {
+func (m *BlobModel) GetBlobList() ([]*data.Blob, error) {
 	// Using Squirrel to build an SQL query
 	getBlobListBuilder := sq.Select("index", "user_id", "data").
 		From("my_table").
@@ -85,20 +66,9 @@ func (m *BlobModel) GetBlobList() ([]*data.Blob2, error) {
 		return nil, err
 	}
 
-	var blobs2 []*data.Blob2
+	var blobs2 []*data.Blob
 	for _, blob := range blobs {
-		m1 := make(map[string]interface{})
-		err1 := json.Unmarshal(blob.Data, &m1)
-		if err1 != nil {
-			return nil, err
-		}
-
-		blob2 := &data.Blob2{}
-		blob2.Index = blob.Index
-		blob2.User_id = blob.User_id
-		blob2.Data = m1
-
-		blobs2 = append(blobs2, blob2)
+		blobs2 = append(blobs2, blob)
 	}
 
 	return blobs2, nil
