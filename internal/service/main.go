@@ -1,6 +1,7 @@
 package service
 
 import (
+	"fmt"
 	"net"
 	"net/http"
 
@@ -15,11 +16,12 @@ type service struct {
 	log      *logan.Entry
 	copus    types.Copus
 	listener net.Listener
+	cfg      config.Config
 }
 
 func (s *service) run() error {
 	s.log.Info("Service started")
-	r := s.router(s.log)
+	r := s.router(s.log, s.cfg)
 
 	if err := s.copus.RegisterChi(r); err != nil {
 		return errors.Wrap(err, "cop failed")
@@ -33,11 +35,13 @@ func newService(cfg config.Config) *service {
 		log:      cfg.Log(),
 		copus:    cfg.Copus(),
 		listener: cfg.Listener(),
+		cfg:      cfg,
 	}
 }
 
 func Run(cfg config.Config) {
 	if err := newService(cfg).run(); err != nil {
+		fmt.Println("test")
 		panic(err)
 	}
 }
