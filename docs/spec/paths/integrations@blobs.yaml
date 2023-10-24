@@ -1,4 +1,5 @@
-post:
+// create blob
+post: 
   tags:
     - Blob
   summary: Create blob
@@ -25,3 +26,23 @@ post:
             data:
               type: object
               $ref: '#/components/schemas/Blob'
+
+
+// get blob list
+get:
+  tags:
+    - Blob 
+  summary: Get blob list
+  operationId: getBlobList
+  responses:
+    '200':
+      description: Successful response
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              data:
+                type: array
+                items:
+                  $ref: '#/components/schemas/Blob'
