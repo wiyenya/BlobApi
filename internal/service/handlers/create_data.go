@@ -27,7 +27,7 @@ func createDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	// Signing
 
-	// Получаем ключ
+	// Get key
 	SECRET_KEY := "SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4"
 	kp, err := keypair.Parse(SECRET_KEY)
 	if err != nil {
@@ -43,7 +43,7 @@ func createDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	txBytes := buf.Bytes()
 
-	// Подписываем транзакцию
+	// Sign tx
 	signedTransaction, err := kp.Sign(txBytes)
 	if err != nil {
 		http.Error(w, "Failed to sign transaction", http.StatusInternalServerError)
@@ -52,7 +52,7 @@ func createDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	encodedSignedTransaction, err := xdr.MarshalBase64(signedTransaction)
 
-	// Отправляем транзакцию на сервер Horizon
+	// Send tx to Horizon
 	endpoint := "https://docs.tokend.io/horizon#operation/submitTransaction"
 	resp, err := http.Post(endpoint, "application/base64", bytes.NewBufferString(encodedSignedTransaction))
 	if err != nil {
@@ -61,7 +61,7 @@ func createDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 	defer resp.Body.Close()
 
-	// Возвращаем ответ клиенту, например, в виде JSON
+	// Responce
 	response := map[string]interface{}{
 		"transaction": encodedSignedTransaction,
 	}
