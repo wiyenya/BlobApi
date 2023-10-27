@@ -16,6 +16,14 @@ require (
 )
 
 require (
+	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible // indirect
+	github.com/nullstyle/go-xdr v0.0.0-20180726165426-f4c839f75077 // indirect
+	gitlab.com/tokend/keypair v0.0.0-20190412110653-b9d7e0c8b312 // indirect
+	gitlab.com/tokend/regources v4.9.1+incompatible // indirect
+	golang.org/x/crypto v0.13.0 // indirect
+)
+
+require (
 	github.com/alecthomas/template v0.0.0-20190718012654-fb15b899a751 // indirect
 	github.com/alecthomas/units v0.0.0-20211218093645-b94a6e3cc137 // indirect
 	github.com/certifi/gocertifi v0.0.0-20200211180108-c7c1fbc02894 // indirect
@@ -47,6 +55,8 @@ require (
 	gitlab.com/distributed_lab/figure v2.1.0+incompatible // indirect
 	gitlab.com/distributed_lab/lorem v0.2.0 // indirect
 	gitlab.com/distributed_lab/running v0.0.0-20200706131153-4af0e83eb96c // indirect
+	gitlab.com/tokend/go v3.16.0+incompatible
+	gitlab.com/tokend/horizon-connector v4.3.1+incompatible
 	golang.org/x/net v0.15.0 // indirect
 	golang.org/x/sys v0.12.0 // indirect
 	golang.org/x/text v0.13.0 // indirect

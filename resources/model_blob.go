@@ -4,6 +4,8 @@
 
 package resources
 
+import "encoding/json"
+
 type Blob struct {
 	Key
 	Attributes    BlobAttributes     `json:"attributes"`
@@ -12,6 +14,17 @@ type Blob struct {
 type BlobResponse struct {
 	Data     Blob     `json:"data"`
 	Included Included `json:"included"`
+}
+
+func (b BlobResponse) MarshalJSON() ([]byte, error) {
+	return json.Marshal(
+		struct {
+			Data     Blob     `json:"data"`
+			Included Included `json:"included"`
+		}{
+			Data:     b.Data,
+			Included: b.Included,
+		})
 }
 
 type BlobListResponse struct {
