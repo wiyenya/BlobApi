@@ -15,11 +15,6 @@ import (
 
 func (s *service) router(entry *logan.Entry, cfg config.Config) chi.Router {
 
-	// dataCreate := handlers.DataCreate{
-	//     Tx:     ,
-	//     Horizon: horizon.NewConnector("https://docs.tokend.io/horizon")
-	// }
-
 	// Open a connection to the database
 	db := cfg.DB()
 

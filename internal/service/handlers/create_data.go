@@ -1,17 +1,17 @@
 package handlers
 
 import (
-	data "BlobApi/internal/data"
 	"bytes"
 	"encoding/json"
 	"net/http"
 
-	"github.com/jmoiron/sqlx/types"
 	"gitlab.com/tokend/go/keypair"
 	"gitlab.com/tokend/go/xdr"
 	"gitlab.com/tokend/go/xdrbuild"
 
 	// "gitlab.com/tokend/horizon-connector"
+	data "BlobApi/internal/data"
+
 	"gitlab.com/tokend/horizon-connector"
 )
 
@@ -24,22 +24,7 @@ type DataCreate struct {
 
 func (c DataCreate) CreateDataHandler(w http.ResponseWriter, r *http.Request) {
 
-	tx := c.Tx
-
-	userID := int32(42)
-	blob := data.Blob{
-		Index:  1,
-		UserId: &userID,
-		Data:   types.JSONText(`{"name":"John", "age":30}`),
-	}
-
-	createDataOp := xdrbuild.CreateData{
-		Type:  uint64(12345),
-		Value: blob,
-	}
-
-	tx = tx.Op(&createDataOp)
-
+	tx := data.Transaction()
 	// Signing
 
 	// Get key
