@@ -5,7 +5,8 @@ import (
 	"encoding/json"
 	"net/http"
 
-	"gitlab.com/tokend/go/keypair"
+	"gitlab.com/distributed_lab/ape"
+	"gitlab.com/distributed_lab/ape/problems"
 	"gitlab.com/tokend/go/xdr"
 	"gitlab.com/tokend/go/xdrbuild"
 
@@ -26,27 +27,12 @@ func (c DataCreate) CreateDataHandler(w http.ResponseWriter, r *http.Request) {
 
 	tx := data.Transaction()
 	// Signing
-
-	// Get key
 	SECRET_KEY := "SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4"
-	kp, err := keypair.Parse(SECRET_KEY)
-	if err != nil {
-		http.Error(w, "Failed to parse secret key", http.StatusInternalServerError)
-		return
-	}
 
-	var buf bytes.Buffer
-	_, err1 := xdr.Marshal(&buf, tx)
-	if err1 != nil {
-		http.Error(w, "Failed to marshal transaction", http.StatusInternalServerError)
-		return
-	}
-	txBytes := buf.Bytes()
-
-	// Sign tx
-	signedTransaction, err := kp.Sign(txBytes)
+	signedTransaction, err := data.Signing(SECRET_KEY, tx)
 	if err != nil {
-		http.Error(w, "Failed to sign transaction", http.StatusInternalServerError)
+		Log(r).WithError(err).Error("Failed to sign transaction")
+		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
@@ -65,6 +51,7 @@ func (c DataCreate) CreateDataHandler(w http.ResponseWriter, r *http.Request) {
 	response := map[string]interface{}{
 		"transaction": encodedSignedTransaction,
 	}
+
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(response)
 }

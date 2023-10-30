@@ -49,7 +49,6 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 	//Getting a blob to return the created resource
 	blob, err := h.Model.Get(blobId)
 	if err != nil {
-
 		Log(r).WithError(err).Error("error getting blob:")
 		ape.RenderErr(w, problems.InternalError())
 		return
