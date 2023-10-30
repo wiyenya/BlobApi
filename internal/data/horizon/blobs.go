@@ -2,44 +2,26 @@ package postgres
 
 import (
 	"bytes"
+	"encoding/json"
+	"fmt"
 	"net/http"
 
-	"github.com/jmoiron/sqlx/types"
-	//"gitlab.com/distributed_lab/kit/pgdb"
 	dataPkg "BlobApi/internal/data"
+
+	"github.com/jmoiron/sqlx/types"
 
 	"gitlab.com/tokend/go/keypair"
 	"gitlab.com/tokend/go/xdr"
 	"gitlab.com/tokend/go/xdrbuild"
 )
 
-// type BlobModel struct {
-// 	DB *pgdb.DB
-// }
+// Определите структуру для обработки ответа
+type ServerResponse struct {
+	ID     string `json:"id"`
+	Status string `json:"status"`
+}
 
-// func (m *BlobModel) Insert(userID int32, data types.JSONText) (int, error) {
-
-// 	// Using Squirrel to build an SQL query
-// 	insertBuilder := sq.Insert("my_table").
-// 		Columns("user_id", "data").
-// 		Values(userID, data).
-// 		Suffix("RETURNING index").
-// 		PlaceholderFormat(sq.Dollar)
-
-// 	//insertBuilder - adds to the database, id - get the id
-
-// 	var id int
-// 	errGet := m.DB.Get(&id, insertBuilder)
-// 	if errGet != nil {
-// 		return 0, errGet
-// 	}
-
-// 	return id, nil
-// }
-
-func Insert(userID int32, data types.JSONText) (*xdr.Operation, error) {
-
-	txBuilder := xdrbuild.NewBuilder("test", int64(1234))
+func Insert(userID int32, data types.JSONText) (string, error) {
 
 	blob := dataPkg.Blob{
 		Index:  1,
@@ -52,107 +34,183 @@ func Insert(userID int32, data types.JSONText) (*xdr.Operation, error) {
 		Value: blob,
 	}
 
-	operation, err := createData.XDR()
+	address, err := keypair.Parse("SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4")
 	if err != nil {
-		return nil, err
+		panic(err)
 	}
+	builder := xdrbuild.NewBuilder("<NETWORK_PASSPHRASE>", 300)
+	tx := builder.Transaction(address)
 
-	// Добавляем операцию к транзакции
-	tx := txBuilder.Transaction().Op(createData)
-
-	// Get the key
-	SECRET_KEY := "SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4"
-	kp, err := keypair.Parse(SECRET_KEY)
+	txEnvelope := tx.Op(createData)
 	if err != nil {
 		panic(err)
 	}
 
 	var buf bytes.Buffer
-	_, err1 := xdr.Marshal(&buf, tx)
+	_, err1 := xdr.Marshal(&buf, txEnvelope)
 	if err1 != nil {
 		panic(err1)
 	}
 	txBytes := buf.Bytes()
 
-	// Sign the transaction
-	signedTransaction, err := kp.Sign(txBytes)
+	signedEnvelope, err := address.Sign(txBytes)
 	if err != nil {
 		panic(err)
 	}
 
-	encodedSignedTransaction, err := xdr.MarshalBase64(signedTransaction)
+	encodedSignedTransaction, err := xdr.MarshalBase64(signedEnvelope)
 
 	endpoint := "http://localhost:8000/_/api/"
 	resp, err := http.Post(endpoint, "application/base64", bytes.NewBufferString(encodedSignedTransaction))
 	// if err != nil {
 	// 	return "", err
 	// }
-	defer resp.Body.Close()
+	defer resp.Body.Close() //guaranteed function fulfillment
 
-	return operation, nil
+	// Обработка ответа
+	var response ServerResponse
+	err = json.NewDecoder(resp.Body).Decode(&response)
+	if err != nil {
+		panic(err)
+	}
+
+	if response.Status != "success" {
+		return "", fmt.Errorf("server returned non-success status")
+	}
+
+	return response.ID, nil
+
 }
 
-// func (m *BlobModel) Get(id int) (*data.Blob, error) {
+func Delete(userID int32) (string, error) {
 
-// 	// Using Squirrel to build an SQL query
-// 	getBuilder := sq.Select("index", "user_id", "data").
-// 		From("my_table").
-// 		Where(sq.Eq{"index": id}).
-// 		PlaceholderFormat(sq.Dollar)
+	removeData := xdrbuild.RemoveData{
+		ID: uint64(userID),
+	}
 
-// 	var blob data.Blob
+	address, err := keypair.Parse("SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4")
+	if err != nil {
+		panic(err)
+	}
+	builder := xdrbuild.NewBuilder("<NETWORK_PASSPHRASE>", 300)
+	tx := builder.Transaction(address)
 
-// 	errQueryRow := m.DB.Get(&blob, getBuilder)
-// 	if errQueryRow == sql.ErrNoRows {
-// 		return nil, errors.New("blob not found")
-// 	} else if errQueryRow != nil {
-// 		return nil, errQueryRow
-// 	}
+	txEnvelope := tx.Op(removeData)
+	if err != nil {
+		panic(err)
+	}
 
-// 	return &blob, nil
-// }
+	var buf bytes.Buffer
+	_, err1 := xdr.Marshal(&buf, txEnvelope)
+	if err1 != nil {
+		panic(err1)
+	}
+	txBytes := buf.Bytes()
 
-// func (m *BlobModel) GetBlobList() ([]*data.Blob, error) {
-// 	// Using Squirrel to build an SQL query
-// 	getBlobListBuilder := sq.Select("index", "user_id", "data").
-// 		From("my_table").
-// 		PlaceholderFormat(sq.Dollar)
+	signedEnvelope, err := address.Sign(txBytes)
+	if err != nil {
+		panic(err)
+	}
 
-// 	var blobs []*data.Blob
-// 	err := m.DB.Select(&blobs, getBlobListBuilder)
-// 	if err != nil {
-// 		return nil, err
-// 	}
+	encodedSignedTransaction, err := xdr.MarshalBase64(signedEnvelope)
 
-// 	var blobs2 []*data.Blob
-// 	for _, blob := range blobs {
-// 		blobs2 = append(blobs2, blob)
-// 	}
+	endpoint := "http://localhost:8000/_/api/"
+	resp, err := http.Post(endpoint, "application/base64", bytes.NewBufferString(encodedSignedTransaction))
+	// if err != nil {
+	// 	return "", err
+	// }
+	defer resp.Body.Close() //guaranteed function fulfillment
 
-// 	return blobs2, nil
-// }
+	return encodedSignedTransaction, nil
+}
 
-// func (m *BlobModel) Delete(id int) error {
+func Update(userID int32, data types.JSONText) (string, error) {
+	updateData := xdrbuild.UpdateData{
+		ID:    uint64(userID),
+		Value: data,
+	}
 
-// 	// Using Squirrel to build an SQL query
-// 	deleteBuilder := sq.Delete("my_table").
-// 		Where(sq.Eq{"index": id}).
-// 		PlaceholderFormat(sq.Dollar)
+	address, err := keypair.Parse("SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4")
+	if err != nil {
+		panic(err)
+	}
+	builder := xdrbuild.NewBuilder("<NETWORK_PASSPHRASE>", 300)
+	tx := builder.Transaction(address)
 
-// 	result, err := m.DB.ExecWithResult(deleteBuilder)
-// 	if err != nil {
-// 		return err
-// 	}
+	txEnvelope := tx.Op(updateData)
+	if err != nil {
+		panic(err)
+	}
 
-// 	// Check that at least one line has been deleted
-// 	rowsAffected, err := result.RowsAffected()
-// 	if err != nil {
-// 		return err
-// 	}
+	var buf bytes.Buffer
+	_, err1 := xdr.Marshal(&buf, txEnvelope)
+	if err1 != nil {
+		panic(err1)
+	}
+	txBytes := buf.Bytes()
 
-// 	if rowsAffected == 0 {
-// 		return errors.New("no rows affected, blob might not exist")
-// 	}
+	signedEnvelope, err := address.Sign(txBytes)
+	if err != nil {
+		panic(err)
+	}
 
-// 	return nil
-// }
+	encodedSignedTransaction, err := xdr.MarshalBase64(signedEnvelope)
+
+	endpoint := "http://localhost:8000/_/api/"
+	resp, err := http.Post(endpoint, "application/base64", bytes.NewBufferString(encodedSignedTransaction))
+	// if err != nil {
+	// 	return "", err
+	// }
+	defer resp.Body.Close() //guaranteed function fulfillment
+
+	return encodedSignedTransaction, nil
+}
+
+const horizonBaseUrl = "https://horizon.tokend.io/v3"
+
+func Get(id int) (*dataPkg.Blob, error) {
+	url := fmt.Sprintf("%s/data/%d", horizonBaseUrl, id)
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error fetching data from Horizon: %s", resp.Status)
+	}
+
+	var blob dataPkg.Blob
+	err = json.NewDecoder(resp.Body).Decode(&blob)
+	if err != nil {
+		return nil, err
+	}
+
+	return &blob, nil
+}
+
+func GetBlobList() ([]*dataPkg.Blob, error) {
+	url := fmt.Sprintf("%s/data", horizonBaseUrl)
+
+	// Добавьте параметры, если необходимо, например:
+	// url += "?filter[type]=YOUR_TYPE&filter[owner]=YOUR_OWNER"
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return nil, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return nil, fmt.Errorf("error fetching data from Horizon: %s", resp.Status)
+	}
+
+	var blobs []*dataPkg.Blob
+	err = json.NewDecoder(resp.Body).Decode(&blobs)
+	if err != nil {
+		return nil, err
+	}
+
+	return blobs, nil
+}
