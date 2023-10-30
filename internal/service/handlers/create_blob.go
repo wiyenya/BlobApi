@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"net/http"
+	"strconv"
 
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
@@ -11,6 +12,8 @@ import (
 	postgres "BlobApi/internal/data/postgres"
 	requests "BlobApi/internal/service/requests"
 	resources "BlobApi/resources"
+
+	horizon "BlobApi/internal/data/horizon"
 )
 
 type BlobHandler struct {
@@ -40,14 +43,21 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Inserting a blob
-	blobId, err := h.Model.Insert(id, jsonData)
+	blobId, err := horizon.Insert(id, jsonData)
 	if err != nil {
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
+	intBlobId, err := strconv.Atoi(blobId)
+	if err != nil {
+		Log(r).WithError(err).Error("error converting blobId to int")
+		ape.RenderErr(w, problems.InternalError())
+		return
+	}
+
 	//Getting a blob to return the created resource
-	blob, err := h.Model.Get(blobId)
+	blob, err := h.Model.Get(int(intBlobId))
 	if err != nil {
 		Log(r).WithError(err).Error("error getting blob:")
 		ape.RenderErr(w, problems.InternalError())
