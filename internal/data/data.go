@@ -1,7 +1,12 @@
 package data
 
 import (
+	"bytes"
+	"fmt"
+
 	"github.com/jmoiron/sqlx/types"
+	"gitlab.com/tokend/go/keypair"
+	"gitlab.com/tokend/go/xdr"
 	"gitlab.com/tokend/go/xdrbuild"
 )
 
@@ -24,4 +29,32 @@ func Transaction() xdrbuild.Transaction {
 	tx = tx.Op(&createDataOp)
 
 	return *tx
+}
+
+func Signing(key string, tx xdrbuild.Transaction) ([]byte, error) {
+
+	kp, err := keypair.Parse(key)
+	if err != nil {
+		fmt.Print(err)
+		fmt.Print("Failed to parse secret key")
+	}
+
+	var buf bytes.Buffer
+	_, err1 := xdr.Marshal(&buf, tx)
+
+	fmt.Print(err1)
+	if err1 != nil {
+		fmt.Print(err1)
+		fmt.Print("Failed to marshal transaction")
+	}
+	txBytes := buf.Bytes()
+
+	// Sign tx
+	bs := make([]byte, 0)
+	signedTransaction, err := kp.Sign(txBytes)
+	if err != nil {
+		return bs, err
+	}
+
+	return signedTransaction, nil
 }
