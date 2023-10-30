@@ -7,7 +7,6 @@ import (
 
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
-	"gitlab.com/tokend/go/xdr"
 	"gitlab.com/tokend/go/xdrbuild"
 
 	// "gitlab.com/tokend/horizon-connector"
@@ -36,12 +35,17 @@ func (c DataCreate) CreateDataHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	encodedSignedTransaction, err := xdr.MarshalBase64(signedTransaction)
+	encodedSignedTransaction, err2 := data.Encode(signedTransaction)
+	if err2 != nil {
+		Log(r).WithError(err).Error("Failed to Marshal")
+		ape.RenderErr(w, problems.InternalError())
+		return
+	}
 
 	// Send tx to Horizon
 	endpoint := "https://docs.tokend.io/horizon#operation/submitTransaction"
-	resp, err := http.Post(endpoint, "application/base64", bytes.NewBufferString(encodedSignedTransaction))
-	if err != nil {
+	resp, err3 := http.Post(endpoint, "application/base64", bytes.NewBufferString(encodedSignedTransaction))
+	if err3 != nil {
 		http.Error(w, "Failed to submit transaction", http.StatusInternalServerError)
 		return
 	}
