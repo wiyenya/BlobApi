@@ -25,16 +25,3 @@ func CtxLog(entry *logan.Entry) func(context.Context) context.Context {
 func Log(r *http.Request) *logan.Entry {
 	return r.Context().Value(logCtxKey).(*logan.Entry)
 }
-
-// func DataCreate(r *http.Request) DataCreate {
-
-// 	txbuilderbuilder := r.Context().Value(txBuilderCtxKey).(data.Infobuilder)
-// 	info := r.Context().Value(coreInfoCtxKey).(data.Info)
-// 	master := keypair.MustParseAddress(CoreInfo(r).MasterAccountID)
-// 	tx := txbuilderbuilder(info, master)
-
-// 	return accountcreator.New(
-// 		tx,
-// 		Horizon(r),
-// 	)
-// }
