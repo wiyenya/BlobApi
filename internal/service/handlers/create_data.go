@@ -43,7 +43,7 @@ func (c DataCreate) CreateDataHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Send tx to Horizon
-	endpoint := "https://docs.tokend.io/horizon#operation/submitTransaction"
+	endpoint := "http://localhost:8000/_/api/"
 	resp, err3 := http.Post(endpoint, "application/base64", bytes.NewBufferString(encodedSignedTransaction))
 	if err3 != nil {
 		http.Error(w, "Failed to submit transaction", http.StatusInternalServerError)

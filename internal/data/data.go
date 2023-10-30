@@ -12,7 +12,7 @@ import (
 
 func Transaction() xdrbuild.Transaction {
 
-	tx := xdrbuild.NewBuilder("test", int64(1234)).Transaction("SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4")
+	tx := xdrbuild.NewBuilder("test", int64(1234)).Transaction()
 
 	userID := int32(42)
 	blob := Blob{
