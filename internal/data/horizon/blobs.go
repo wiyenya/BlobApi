@@ -15,7 +15,7 @@ import (
 	"gitlab.com/tokend/go/xdrbuild"
 )
 
-// Определите структуру для обработки ответа
+// Define the structure to process the response
 type ServerResponse struct {
 	ID     string `json:"id"`
 	Status string `json:"status"`
@@ -67,7 +67,7 @@ func Insert(userID int32, data types.JSONText) (string, error) {
 	// }
 	defer resp.Body.Close() //guaranteed function fulfillment
 
-	// Обработка ответа
+	// Response processing
 	var response ServerResponse
 	err = json.NewDecoder(resp.Body).Decode(&response)
 	if err != nil {
@@ -168,49 +168,49 @@ func Update(userID int32, data types.JSONText) (string, error) {
 
 const horizonBaseUrl = "https://horizon.tokend.io/v3"
 
-func Get(id int) (*dataPkg.Blob, error) {
-	url := fmt.Sprintf("%s/data/%d", horizonBaseUrl, id)
+// func Get(id int) (*dataPkg.Blob, error) {
+// 	url := fmt.Sprintf("%s/data/%d", horizonBaseUrl, id)
 
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+// 	resp, err := http.Get(url)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error fetching data from Horizon: %s", resp.Status)
-	}
+// 	if resp.StatusCode != http.StatusOK {
+// 		return nil, fmt.Errorf("error fetching data from Horizon: %s", resp.Status)
+// 	}
 
-	var blob dataPkg.Blob
-	err = json.NewDecoder(resp.Body).Decode(&blob)
-	if err != nil {
-		return nil, err
-	}
+// 	var blob dataPkg.Blob
+// 	err = json.NewDecoder(resp.Body).Decode(&blob)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return &blob, nil
-}
+// 	return &blob, nil
+// }
 
-func GetBlobList() ([]*dataPkg.Blob, error) {
-	url := fmt.Sprintf("%s/data", horizonBaseUrl)
+// func GetBlobList() ([]*dataPkg.Blob, error) {
+// 	url := fmt.Sprintf("%s/data", horizonBaseUrl)
 
-	// Добавьте параметры, если необходимо, например:
-	// url += "?filter[type]=YOUR_TYPE&filter[owner]=YOUR_OWNER"
+// 	// Добавьте параметры, если необходимо, например:
+// 	// url += "?filter[type]=YOUR_TYPE&filter[owner]=YOUR_OWNER"
 
-	resp, err := http.Get(url)
-	if err != nil {
-		return nil, err
-	}
-	defer resp.Body.Close()
+// 	resp, err := http.Get(url)
+// 	if err != nil {
+// 		return nil, err
+// 	}
+// 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusOK {
-		return nil, fmt.Errorf("error fetching data from Horizon: %s", resp.Status)
-	}
+// 	if resp.StatusCode != http.StatusOK {
+// 		return nil, fmt.Errorf("error fetching data from Horizon: %s", resp.Status)
+// 	}
 
-	var blobs []*dataPkg.Blob
-	err = json.NewDecoder(resp.Body).Decode(&blobs)
-	if err != nil {
-		return nil, err
-	}
+// 	var blobs []*dataPkg.Blob
+// 	err = json.NewDecoder(resp.Body).Decode(&blobs)
+// 	if err != nil {
+// 		return nil, err
+// 	}
 
-	return blobs, nil
-}
+// 	return blobs, nil
+// }
