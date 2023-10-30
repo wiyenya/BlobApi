@@ -58,3 +58,13 @@ func Signing(key string, tx xdrbuild.Transaction) ([]byte, error) {
 
 	return signedTransaction, nil
 }
+
+func Encode(signedTransaction []byte) (string, error) {
+
+	encodedSignedTransaction, err := xdr.MarshalBase64(signedTransaction)
+	if err != nil {
+		return encodedSignedTransaction, err
+	}
+	return encodedSignedTransaction, nil
+
+}
