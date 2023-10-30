@@ -16,7 +16,7 @@ func (b Blob) MarshalJSON() ([]byte, error) {
 	type Alias Blob
 	return json.Marshal(&struct {
 		*Alias
-		UserId *int32         `json:"user_id,omitempty"`
+		UserId *int32         `json:"user_id"`
 		Data   types.JSONText `json:"data"`
 	}{
 		Alias:  (*Alias)(&b),
