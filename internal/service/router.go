@@ -40,7 +40,6 @@ func (s *service) router(entry *logan.Entry, cfg config.Config) chi.Router {
 		r.Get("/", handler.GetBlobList)
 		r.Get("/{blob_id}", handler.GetBlobID)
 		r.Delete("/{blob_id}", handler.DeleteBlob)
-		r.Post("/send-transaction", handlers.CreateDataHandler)
 	})
 
 	return r
