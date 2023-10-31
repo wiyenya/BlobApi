@@ -1,32 +1,16 @@
 package handlers
 
 import (
+	"BlobApi/internal/service/requests"
+	"BlobApi/resources"
 	"encoding/json"
 	"fmt"
-	"net/http"
-
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
-
-	horizon "BlobApi/internal/data/horizon"
-	//postgres "BlobApi/internal/data/postgres"
-	requests "BlobApi/internal/service/requests"
-	resources "BlobApi/resources"
+	"net/http"
 )
 
-type BlobHandlerHorizon struct {
-	Model *horizon.HorizonModel
-}
-
-type BlobHandler struct {
-	Model *horizon.HorizonModel
-}
-
-func NewBlobHandlerHorizon(m *horizon.HorizonModel) *BlobHandlerHorizon {
-	return &BlobHandlerHorizon{Model: m}
-}
-
-func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
+func CreateBlob(w http.ResponseWriter, r *http.Request) {
 	// Decoding the request body
 
 	req, err := requests.DecodeCreateBlobRequest(r)
@@ -35,6 +19,8 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 		ape.RenderErr(w, problems.BadRequest(err)...)
 		return
 	}
+
+	connector := HorizonConnector(r)
 
 	id := req.Relationships.UserId
 
@@ -45,14 +31,14 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	// Inserting a blob
-	blobId, err := h.Model.Insert(id, jsonData)
+	blobId, err := connector.Insert(id, jsonData)
 	if err != nil {
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
 	//Getting a blob to return the created resource
-	blob, err := h.Model.Get(blobId)
+	blob, err := connector.Get(blobId)
 	if err != nil {
 
 		Log(r).WithError(err).Error("error getting blob:")

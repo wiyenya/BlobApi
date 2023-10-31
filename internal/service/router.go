@@ -14,36 +14,10 @@ import (
 	"gitlab.com/distributed_lab/logan/v3"
 )
 
-type Important struct {
-	Seed               string
-	EndpointForPost    string
-	EndpointForGet     string
-	EndpointForGetList string
-	NetworkPassphrase  string
-	TxExpirationPeriod int64
-}
-
-func NewImportant(Seed string, EndpointForPost string, EndpointForGet string, EndpointForGetList string, NetworkPassphrase string, TxExpirationPeriod int64) *Important {
-	return &Important{
-		Seed:               Seed,
-		EndpointForPost:    EndpointForPost,
-		EndpointForGet:     EndpointForGet,
-		EndpointForGetList: EndpointForGetList,
-		NetworkPassphrase:  NetworkPassphrase,
-		TxExpirationPeriod: TxExpirationPeriod,
-	}
-}
-
 func (s *service) router(entry *logan.Entry, cfg config.Config) chi.Router {
 
-	// Create an instance of BlobModel by passing db to it
-	BlobModel := &horizon.HorizonModel{
-		log:     &logan.Entry{},
-		horizon: &horizon.Connector{},
-	}
-
-	// Create an instance of BlobHandler by passing it a BlobModel
-	handler := handlers.NewBlobHandler(BlobModel)
+	connector := horizon.NewHorizonModel(entry, "http://localhost:8000/_/api/",
+		"SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4")
 
 	r := chi.NewRouter()
 
@@ -52,15 +26,16 @@ func (s *service) router(entry *logan.Entry, cfg config.Config) chi.Router {
 		ape.LoganMiddleware(s.log),
 		ape.CtxMiddleware(
 			handlers.CtxLog(s.log),
+			handlers.CtxHorizonConnector(connector),
 		),
 		middleware.Logger(entry, 300*time.Millisecond),
 	)
 
 	r.Route("/integrations/blobs", func(r chi.Router) {
-		r.Post("/", handler.CreateBlob)
-		r.Get("/", handler.GetBlobList)
-		r.Get("/{blob_id}", handler.GetBlobID)
-		r.Delete("/{blob_id}", handler.DeleteBlob)
+		r.Post("/", handlers.CreateBlob)
+		r.Get("/", handlers.GetBlobList)
+		r.Get("/{blob_id}", handlers.GetBlobID)
+		r.Delete("/{blob_id}", handlers.DeleteBlob)
 	})
 
 	return r

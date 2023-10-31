@@ -17,10 +17,12 @@ require (
 
 require (
 	github.com/go-ozzo/ozzo-validation v3.6.0+incompatible // indirect
+	github.com/gotestyourself/gotestyourself v1.4.0 // indirect
 	github.com/nullstyle/go-xdr v0.0.0-20180726165426-f4c839f75077 // indirect
 	gitlab.com/tokend/keypair v0.0.0-20190412110653-b9d7e0c8b312 // indirect
 	gitlab.com/tokend/regources v4.9.1+incompatible // indirect
 	golang.org/x/crypto v0.13.0 // indirect
+	gotest.tools v1.4.0 // indirect
 )
 
 require (

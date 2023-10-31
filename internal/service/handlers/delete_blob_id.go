@@ -9,7 +9,7 @@ import (
 	"gitlab.com/distributed_lab/ape/problems"
 )
 
-func (h *BlobHandler) DeleteBlob(w http.ResponseWriter, r *http.Request) {
+func DeleteBlob(w http.ResponseWriter, r *http.Request) {
 
 	id, err := requests.DecodeDeleteBlobRequest(r)
 	if err != nil || id < 1 {
@@ -20,7 +20,9 @@ func (h *BlobHandler) DeleteBlob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	errorDelete := h.Model.Delete(id)
+	connector := HorizonConnector(r)
+
+	errorDelete := connector.Delete(id)
 	if errorDelete != nil {
 		Log(r).WithError(errorDelete).Error("error deleting blob:")
 		ape.RenderErr(w, problems.InternalError())

@@ -10,9 +10,10 @@ import (
 	"gitlab.com/distributed_lab/ape/problems"
 )
 
-func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
+func GetBlobList(w http.ResponseWriter, r *http.Request) {
 
-	blobs, err := h.Model.GetBlobList()
+	connector := HorizonConnector(r)
+	blobs, err := connector.GetBlobList()
 	if err != nil {
 
 		Log(r).WithError(err).Error("error getting blob:")
@@ -21,7 +22,6 @@ func (h *BlobHandler) GetBlobList(w http.ResponseWriter, r *http.Request) {
 	}
 
 	if blobs == nil {
-
 		Log(r).WithError(err).Error("No blob found")
 		ape.RenderErr(w, problems.NotFound())
 		return

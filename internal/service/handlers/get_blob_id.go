@@ -13,7 +13,7 @@ import (
 	"gitlab.com/distributed_lab/ape/problems"
 )
 
-func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
+func GetBlobID(w http.ResponseWriter, r *http.Request) {
 
 	id, err := requests.DecodeGetBlobRequest(r)
 	if err != nil || id < 1 {
@@ -22,8 +22,10 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	connector := HorizonConnector(r)
+
 	//Retrieve record by ID
-	blob, err := h.Model.Get(id)
+	blob, err := connector.Get(id)
 	if err != nil {
 
 		Log(r).WithError(err).Error("error getting blob:")
