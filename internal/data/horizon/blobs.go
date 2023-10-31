@@ -2,22 +2,23 @@ package postgres
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"fmt"
 	"gitlab.com/distributed_lab/logan/v3"
 	"gitlab.com/distributed_lab/logan/v3/errors"
-	"gitlab.com/tokend/go/strkey"
 	"gitlab.com/tokend/horizon-connector"
+	regources "gitlab.com/tokend/regources/generated"
 	"net/http"
+	"net/url"
 
 	dataPkg "BlobApi/internal/data"
 
 	"github.com/jmoiron/sqlx/types"
 
-	"BlobApi/internal/service"
-	"gitlab.com/tokend/go/keypair"
 	"gitlab.com/tokend/go/xdr"
 	"gitlab.com/tokend/go/xdrbuild"
+	"gitlab.com/tokend/keypair"
 )
 
 // Define the structure to process the response
@@ -29,32 +30,31 @@ type ServerResponse struct {
 type HorizonModel struct {
 	log     *logan.Entry
 	horizon *horizon.Connector
+	kp      keypair.Full
+	builder *xdrbuild.Builder
 }
 
-var s = service.NewImportant(
-	"SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4",
-	"http://localhost:8000/_/api/",
-	"http://localhost:8000/_/api/v3/data/",
-	"http://localhost:8000/_/api/v3/data/",
-	"TokenD Developer Network",
-	601200,
-)
-
-func keyP(str string) *keypair.Full {
-	//for Singing
-	raw, err := strkey.Decode(strkey.VersionByteSeed, str)
+func NewHorizonModel(log *logan.Entry, domain string, seed string) *HorizonModel {
+	kp := keypair.MustParseSeed(seed)
+	horizonUrl, err := url.Parse(domain)
 	if err != nil {
 		panic(err)
 	}
 
-	var seed [32]byte
-	if len(raw) != 32 {
-		panic("decoded seed is not 32 bytes long")
-	}
-	copy(seed[:], raw)
+	horizonClient := horizon.NewConnector(horizonUrl).
+		WithSigner(kp)
 
-	kp, err := keypair.FromRawSeed(seed)
-	return kp
+	txBuilder, err := horizonClient.TXBuilder()
+	if err != nil {
+		panic(err)
+	}
+
+	return &HorizonModel{
+		log:     log,
+		horizon: horizonClient,
+		kp:      kp,
+		builder: txBuilder,
+	}
 }
 
 func (q *HorizonModel) Insert(userID int32, data types.JSONText) (int, error) {
@@ -70,29 +70,21 @@ func (q *HorizonModel) Insert(userID int32, data types.JSONText) (int, error) {
 		Value: blob,
 	}
 
-	address, err := keypair.Parse(s.Seed)
-
+	tx, err := q.builder.Transaction(q.kp).
+		Op(createData).
+		Sign(q.kp).
+		Marshal()
 	if err != nil {
-		panic(err)
-	}
-	builder := xdrbuild.NewBuilder(s.NetworkPassphrase, s.TxExpirationPeriod)
-	tx := builder.Transaction(address)
-
-	txEnvelope := tx.Op(createData)
-	if err != nil {
-		panic(err)
+		return 0, errors.Wrap(err, "failed to build tx")
 	}
 
-	//Singing
-	signedEnvelope := txEnvelope.Sign(keyP(s.Seed))
+	resp := q.horizon.Submitter().Submit(context.TODO(), tx)
 
-	encodedSignedTransaction, err := xdr.MarshalBase64(signedEnvelope)
-
-	resp, err := http.Post(s.EndpointForPost, "application/base64", bytes.NewBufferString(encodedSignedTransaction))
-	// if err != nil {
-	// 	return "", err
-	// }
-	defer resp.Body.Close() //guaranteed function fulfillment
+	var txResponse xdr.TransactionResult
+	err = xdr.SafeUnmarshalBase64(resp.ResultXDR, &txResponse)
+	if err != nil {
+		return 0, errors.Wrap(err, "failed to unmarshal tx response")
+	}
 
 	// Response processing
 	var response ServerResponse
@@ -110,30 +102,46 @@ func (q *HorizonModel) Insert(userID int32, data types.JSONText) (int, error) {
 }
 
 func (q *HorizonModel) Get(id int) (*dataPkg.Blob, error) {
-
-	str := s.EndpointForGet + "%d"
-	endpoint := fmt.Sprintf(str, id)
-
-	response, err := q.horizon.Client().Get(endpoint)
+	resp, err := q.horizon.Client().Get(fmt.Sprintf("/v3/data/%d", id))
 	if err != nil {
 		return nil, errors.Wrap(err, "request failed")
 	}
 
-	if response == nil {
-		return nil, nil
+	var parsedResponse regources.DataResponse
+	if err := json.Unmarshal(resp, &parsedResponse); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal")
 	}
 
 	var blob dataPkg.Blob
-	if err := json.Unmarshal(response, &blob); err != nil {
+	if err := json.Unmarshal(parsedResponse.Data.Attributes.Value, &blob); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal")
 	}
+
 	return &blob, nil
+
+	//str := s.EndpointForGet + "%d"
+	//endpoint := fmt.Sprintf(str, id)
+	//
+	//response, err := q.horizon.Client().Get(endpoint)
+	//if err != nil {
+	//	return nil, errors.Wrap(err, "request failed")
+	//}
+	//
+	//if response == nil {
+	//	return nil, nil
+	//}
+	//
+	//var blob dataPkg.Blob
+	//if err := json.Unmarshal(response, &blob); err != nil {
+	//	return nil, errors.Wrap(err, "failed to unmarshal")
+	//}
+	//return &blob, nil
 
 }
 
 func (q *HorizonModel) GetBlobList() ([]*dataPkg.Blob, error) {
 
-	response, err := q.horizon.Client().Get(s.EndpointForGetList)
+	response, err := q.horizon.Client().Get("/v3/data")
 	if err != nil {
 		return nil, errors.Wrap(err, "request failed")
 	}
@@ -142,17 +150,21 @@ func (q *HorizonModel) GetBlobList() ([]*dataPkg.Blob, error) {
 		return nil, nil
 	}
 
-	var blobs []*dataPkg.Blob
-	if err := json.Unmarshal(response, &blobs); err != nil {
+	var parsedResponse regources.DataListResponse
+	if err := json.Unmarshal(response, &parsedResponse); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal")
 	}
 
-	var blobs2 []*dataPkg.Blob
-	for _, blob := range blobs {
-		blobs2 = append(blobs2, blob)
+	result := make([]*dataPkg.Blob, len(parsedResponse.Data))
+	for i, data := range parsedResponse.Data {
+		var blob dataPkg.Blob
+		if err := json.Unmarshal(data.Attributes.Value, &blob); err != nil {
+			return nil, errors.Wrap(err, "failed to unmarshal")
+		}
+		result[i] = &blob
 	}
 
-	return blobs2, nil
+	return result, nil
 }
 
 func (q *HorizonModel) Delete(id int) error {

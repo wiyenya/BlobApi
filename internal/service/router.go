@@ -2,6 +2,9 @@ package service
 
 import (
 	"BlobApi/internal/config"
+	"context"
+	"sync"
+
 	//postgres "BlobApi/internal/data/postgres"
 	horizon "BlobApi/internal/data/horizon"
 	"BlobApi/internal/service/handlers"
@@ -14,44 +17,39 @@ import (
 	"gitlab.com/distributed_lab/logan/v3"
 )
 
-type Important struct {
-	Seed               string
-	EndpointForPost    string
-	EndpointForGet     string
-	EndpointForGetList string
-	NetworkPassphrase  string
-	TxExpirationPeriod int64
-}
-
-func NewImportant(Seed string, EndpointForPost string, EndpointForGet string, EndpointForGetList string, NetworkPassphrase string, TxExpirationPeriod int64) *Important {
-	return &Important{
-		Seed:               Seed,
-		EndpointForPost:    EndpointForPost,
-		EndpointForGet:     EndpointForGet,
-		EndpointForGetList: EndpointForGetList,
-		NetworkPassphrase:  NetworkPassphrase,
-		TxExpirationPeriod: TxExpirationPeriod,
-	}
-}
-
 func (s *service) router(entry *logan.Entry, cfg config.Config) chi.Router {
 
 	// Create an instance of BlobModel by passing db to it
-	BlobModel := &horizon.HorizonModel{
-		log:     &logan.Entry{},
-		horizon: &horizon.Connector{},
-	}
+	connector := horizon.NewHorizonModel(entry, "http://localhost:8000/_/api/",
+		"SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4")
 
 	// Create an instance of BlobHandler by passing it a BlobModel
 	handler := handlers.NewBlobHandler(BlobModel)
 
+	sync.WaitGroup
+
 	r := chi.NewRouter()
+
+	ctx := context.Background()
+	ctx, _ := context.WithDeadline(ctx, time.Now().Add(30*time.Millisecond))
+
+	go func() {
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			default:
+				// Do something
+			}
+		}
+	}()
 
 	r.Use(
 		ape.RecoverMiddleware(s.log),
 		ape.LoganMiddleware(s.log),
 		ape.CtxMiddleware(
 			handlers.CtxLog(s.log),
+			handlers.CtxHorizonConnector(connector),
 		),
 		middleware.Logger(entry, 300*time.Millisecond),
 	)

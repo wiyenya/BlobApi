@@ -36,6 +36,8 @@ func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	connector := HorizonConnector(r)
+
 	id := req.Relationships.UserId
 
 	//data to JSON (map to bytes)
