@@ -4,12 +4,17 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"gitlab.com/distributed_lab/logan/v3"
+	"gitlab.com/distributed_lab/logan/v3/errors"
+	"gitlab.com/tokend/go/strkey"
+	"gitlab.com/tokend/horizon-connector"
 	"net/http"
 
 	dataPkg "BlobApi/internal/data"
 
 	"github.com/jmoiron/sqlx/types"
 
+	"BlobApi/internal/service"
 	"gitlab.com/tokend/go/keypair"
 	"gitlab.com/tokend/go/xdr"
 	"gitlab.com/tokend/go/xdrbuild"
@@ -21,7 +26,38 @@ type ServerResponse struct {
 	Status string `json:"status"`
 }
 
-func Insert(userID int32, data types.JSONText) (string, error) {
+type HorizonModel struct {
+	log     *logan.Entry
+	horizon *horizon.Connector
+}
+
+var s = service.NewImportant(
+	"SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4",
+	"http://localhost:8000/_/api/",
+	"http://localhost:8000/_/api/v3/data/",
+	"http://localhost:8000/_/api/v3/data/",
+	"TokenD Developer Network",
+	601200,
+)
+
+func keyP(str string) *keypair.Full {
+	//for Singing
+	raw, err := strkey.Decode(strkey.VersionByteSeed, str)
+	if err != nil {
+		panic(err)
+	}
+
+	var seed [32]byte
+	if len(raw) != 32 {
+		panic("decoded seed is not 32 bytes long")
+	}
+	copy(seed[:], raw)
+
+	kp, err := keypair.FromRawSeed(seed)
+	return kp
+}
+
+func (q *HorizonModel) Insert(userID int32, data types.JSONText) (string, error) {
 
 	blob := dataPkg.Blob{
 		Index:  1,
@@ -34,11 +70,12 @@ func Insert(userID int32, data types.JSONText) (string, error) {
 		Value: blob,
 	}
 
-	address, err := keypair.Parse("SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4")
+	address, err := keypair.Parse(s.Seed)
+
 	if err != nil {
 		panic(err)
 	}
-	builder := xdrbuild.NewBuilder("<NETWORK_PASSPHRASE>", 300)
+	builder := xdrbuild.NewBuilder(s.NetworkPassphrase, s.TxExpirationPeriod)
 	tx := builder.Transaction(address)
 
 	txEnvelope := tx.Op(createData)
@@ -46,22 +83,12 @@ func Insert(userID int32, data types.JSONText) (string, error) {
 		panic(err)
 	}
 
-	var buf bytes.Buffer
-	_, err1 := xdr.Marshal(&buf, txEnvelope)
-	if err1 != nil {
-		panic(err1)
-	}
-	txBytes := buf.Bytes()
-
-	signedEnvelope, err := address.Sign(txBytes)
-	if err != nil {
-		panic(err)
-	}
+	//Singing
+	signedEnvelope := txEnvelope.Sign(keyP(s.Seed))
 
 	encodedSignedTransaction, err := xdr.MarshalBase64(signedEnvelope)
 
-	endpoint := "http://localhost:8000/_/api/"
-	resp, err := http.Post(endpoint, "application/base64", bytes.NewBufferString(encodedSignedTransaction))
+	resp, err := http.Post(s.EndpointForPost, "application/base64", bytes.NewBufferString(encodedSignedTransaction))
 	// if err != nil {
 	// 	return "", err
 	// }
@@ -82,10 +109,55 @@ func Insert(userID int32, data types.JSONText) (string, error) {
 
 }
 
-func Delete(userID int32) (string, error) {
+func (q *HorizonModel) Get(id int) (*dataPkg.Blob, error) {
 
+	str := s.EndpointForGet + "%d"
+	endpoint := fmt.Sprintf(str, id)
+
+	response, err := q.horizon.Client().Get(endpoint)
+	if err != nil {
+		return nil, errors.Wrap(err, "request failed")
+	}
+
+	if response == nil {
+		return nil, nil
+	}
+
+	var blob dataPkg.Blob
+	if err := json.Unmarshal(response, &blob); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal")
+	}
+	return &blob, nil
+
+}
+
+func (q *HorizonModel) GetBlobList() ([]*dataPkg.Blob, error) {
+
+	response, err := q.horizon.Client().Get(s.EndpointForGetList)
+	if err != nil {
+		return nil, errors.Wrap(err, "request failed")
+	}
+
+	if response == nil {
+		return nil, nil
+	}
+
+	var blobs []*dataPkg.Blob
+	if err := json.Unmarshal(response, &blobs); err != nil {
+		return nil, errors.Wrap(err, "failed to unmarshal")
+	}
+
+	var blobs2 []*dataPkg.Blob
+	for _, blob := range blobs {
+		blobs2 = append(blobs2, blob)
+	}
+
+	return blobs2, nil
+}
+
+func (q *HorizonModel) Delete(id int) error {
 	removeData := xdrbuild.RemoveData{
-		ID: uint64(userID),
+		ID: uint64(id),
 	}
 
 	address, err := keypair.Parse("SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4")
@@ -100,17 +172,8 @@ func Delete(userID int32) (string, error) {
 		panic(err)
 	}
 
-	var buf bytes.Buffer
-	_, err1 := xdr.Marshal(&buf, txEnvelope)
-	if err1 != nil {
-		panic(err1)
-	}
-	txBytes := buf.Bytes()
-
-	signedEnvelope, err := address.Sign(txBytes)
-	if err != nil {
-		panic(err)
-	}
+	//Singing
+	signedEnvelope := txEnvelope.Sign(keyP(s.Seed))
 
 	encodedSignedTransaction, err := xdr.MarshalBase64(signedEnvelope)
 
@@ -121,96 +184,6 @@ func Delete(userID int32) (string, error) {
 	// }
 	defer resp.Body.Close() //guaranteed function fulfillment
 
-	return encodedSignedTransaction, nil
+	return nil
+
 }
-
-func Update(userID int32, data types.JSONText) (string, error) {
-	updateData := xdrbuild.UpdateData{
-		ID:    uint64(userID),
-		Value: data,
-	}
-
-	address, err := keypair.Parse("SAMJKTZVW5UOHCDK5INYJNORF2HRKYI72M5XSZCBYAHQHR34FFR4Z6G4")
-	if err != nil {
-		panic(err)
-	}
-	builder := xdrbuild.NewBuilder("<NETWORK_PASSPHRASE>", 300)
-	tx := builder.Transaction(address)
-
-	txEnvelope := tx.Op(updateData)
-	if err != nil {
-		panic(err)
-	}
-
-	var buf bytes.Buffer
-	_, err1 := xdr.Marshal(&buf, txEnvelope)
-	if err1 != nil {
-		panic(err1)
-	}
-	txBytes := buf.Bytes()
-
-	signedEnvelope, err := address.Sign(txBytes)
-	if err != nil {
-		panic(err)
-	}
-
-	encodedSignedTransaction, err := xdr.MarshalBase64(signedEnvelope)
-
-	endpoint := "http://localhost:8000/_/api/"
-	resp, err := http.Post(endpoint, "application/base64", bytes.NewBufferString(encodedSignedTransaction))
-	// if err != nil {
-	// 	return "", err
-	// }
-	defer resp.Body.Close() //guaranteed function fulfillment
-
-	return encodedSignedTransaction, nil
-}
-
-const horizonBaseUrl = "https://horizon.tokend.io/v3"
-
-// func Get(id int) (*dataPkg.Blob, error) {
-// 	url := fmt.Sprintf("%s/data/%d", horizonBaseUrl, id)
-
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer resp.Body.Close()
-
-// 	if resp.StatusCode != http.StatusOK {
-// 		return nil, fmt.Errorf("error fetching data from Horizon: %s", resp.Status)
-// 	}
-
-// 	var blob dataPkg.Blob
-// 	err = json.NewDecoder(resp.Body).Decode(&blob)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return &blob, nil
-// }
-
-// func GetBlobList() ([]*dataPkg.Blob, error) {
-// 	url := fmt.Sprintf("%s/data", horizonBaseUrl)
-
-// 	// Добавьте параметры, если необходимо, например:
-// 	// url += "?filter[type]=YOUR_TYPE&filter[owner]=YOUR_OWNER"
-
-// 	resp, err := http.Get(url)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-// 	defer resp.Body.Close()
-
-// 	if resp.StatusCode != http.StatusOK {
-// 		return nil, fmt.Errorf("error fetching data from Horizon: %s", resp.Status)
-// 	}
-
-// 	var blobs []*dataPkg.Blob
-// 	err = json.NewDecoder(resp.Body).Decode(&blobs)
-// 	if err != nil {
-// 		return nil, err
-// 	}
-
-// 	return blobs, nil
-// }

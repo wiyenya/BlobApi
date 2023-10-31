@@ -13,6 +13,26 @@ import (
 	"gitlab.com/distributed_lab/logan/v3"
 )
 
+type Important struct {
+	Seed               string
+	EndpointForPost    string
+	EndpointForGet     string
+	EndpointForGetList string
+	NetworkPassphrase  string
+	TxExpirationPeriod int64
+}
+
+func NewImportant(Seed string, EndpointForPost string, EndpointForGet string, EndpointForGetList string, NetworkPassphrase string, TxExpirationPeriod int64) *Important {
+	return &Important{
+		Seed:               Seed,
+		EndpointForPost:    EndpointForPost,
+		EndpointForGet:     EndpointForGet,
+		EndpointForGetList: EndpointForGetList,
+		NetworkPassphrase:  NetworkPassphrase,
+		TxExpirationPeriod: TxExpirationPeriod,
+	}
+}
+
 func (s *service) router(entry *logan.Entry, cfg config.Config) chi.Router {
 
 	// Open a connection to the database
