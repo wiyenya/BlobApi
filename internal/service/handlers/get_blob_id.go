@@ -17,10 +17,8 @@ func (h *BlobHandler) GetBlobID(w http.ResponseWriter, r *http.Request) {
 
 	id, err := requests.DecodeGetBlobRequest(r)
 	if err != nil || id < 1 {
-
 		Log(r).WithError(err).Error("Invalid ID")
 		ape.RenderErr(w, problems.BadRequest(err)...)
-
 		return
 	}
 

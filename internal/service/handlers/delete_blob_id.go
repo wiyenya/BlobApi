@@ -20,12 +20,10 @@ func (h *BlobHandler) DeleteBlob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	error := h.Model.Delete(id)
-	if error != nil {
-
-		Log(r).WithError(err).Error("error deleting blob:")
+	errorDelete := h.Model.Delete(id)
+	if errorDelete != nil {
+		Log(r).WithError(errorDelete).Error("error deleting blob:")
 		ape.RenderErr(w, problems.InternalError())
-
 		return
 	}
 

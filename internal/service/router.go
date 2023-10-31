@@ -2,7 +2,8 @@ package service
 
 import (
 	"BlobApi/internal/config"
-	postgres "BlobApi/internal/data/postgres"
+	//postgres "BlobApi/internal/data/postgres"
+	horizon "BlobApi/internal/data/horizon"
 	"BlobApi/internal/service/handlers"
 	middleware "BlobApi/internal/service/middleware"
 
@@ -35,11 +36,11 @@ func NewImportant(Seed string, EndpointForPost string, EndpointForGet string, En
 
 func (s *service) router(entry *logan.Entry, cfg config.Config) chi.Router {
 
-	// Open a connection to the database
-	db := cfg.DB()
-
 	// Create an instance of BlobModel by passing db to it
-	BlobModel := &postgres.BlobModel{DB: db}
+	BlobModel := &horizon.HorizonModel{
+		log:     &logan.Entry{},
+		horizon: &horizon.Connector{},
+	}
 
 	// Create an instance of BlobHandler by passing it a BlobModel
 	handler := handlers.NewBlobHandler(BlobModel)

@@ -22,7 +22,7 @@ import (
 
 // Define the structure to process the response
 type ServerResponse struct {
-	ID     string `json:"id"`
+	ID     int    `json:"id"`
 	Status string `json:"status"`
 }
 
@@ -57,7 +57,7 @@ func keyP(str string) *keypair.Full {
 	return kp
 }
 
-func (q *HorizonModel) Insert(userID int32, data types.JSONText) (string, error) {
+func (q *HorizonModel) Insert(userID int32, data types.JSONText) (int, error) {
 
 	blob := dataPkg.Blob{
 		Index:  1,
@@ -102,7 +102,7 @@ func (q *HorizonModel) Insert(userID int32, data types.JSONText) (string, error)
 	}
 
 	if response.Status != "success" {
-		return "", fmt.Errorf("server returned non-success status")
+		return -1, fmt.Errorf("server returned non-success status")
 	}
 
 	return response.ID, nil

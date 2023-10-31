@@ -8,17 +8,22 @@ import (
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 
-	postgres "BlobApi/internal/data/postgres"
+	horizon "BlobApi/internal/data/horizon"
+	//postgres "BlobApi/internal/data/postgres"
 	requests "BlobApi/internal/service/requests"
 	resources "BlobApi/resources"
 )
 
-type BlobHandler struct {
-	Model *postgres.BlobModel
+type BlobHandlerHorizon struct {
+	Model *horizon.HorizonModel
 }
 
-func NewBlobHandler(m *postgres.BlobModel) *BlobHandler {
-	return &BlobHandler{Model: m}
+type BlobHandler struct {
+	Model *horizon.HorizonModel
+}
+
+func NewBlobHandlerHorizon(m *horizon.HorizonModel) *BlobHandlerHorizon {
+	return &BlobHandlerHorizon{Model: m}
 }
 
 func (h *BlobHandler) CreateBlob(w http.ResponseWriter, r *http.Request) {
