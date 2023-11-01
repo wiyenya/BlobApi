@@ -107,13 +107,11 @@ func (q *HorizonModel) Get(id int) (*dataPkg.Blob, error) {
 	logan.New().Debug(id)
 	resp, err := q.horizon.Client().Get(fmt.Sprintf("/v3/data/%d", id))
 	if err != nil {
-		logan.New().Debug("test")
 		return nil, errors.Wrap(err, "request failed")
 	}
 
 	if len(resp) == 0 {
 		// resp is empty
-		logan.New().Debug("no blob found")
 		return nil, errors.Wrap(err, "request failed")
 	}
 
@@ -162,6 +160,15 @@ func (q *HorizonModel) GetBlobList() ([]*dataPkg.Blob, error) {
 }
 
 func (q *HorizonModel) Delete(id int) error {
+
+	//try to find blob my id
+	resp, err := q.horizon.Client().Get(fmt.Sprintf("/v3/data/%d", id))
+	if len(resp) == 0 {
+		customErr := fmt.Errorf("Blob not found for ID %d", id)
+		return errors.Wrap(customErr, "request failed")
+	}
+
+	logan.New().Debug("test")
 	removeData := xdrbuild.RemoveData{
 		ID: uint64(id),
 	}

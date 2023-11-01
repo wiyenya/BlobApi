@@ -23,6 +23,7 @@ func DeleteBlob(w http.ResponseWriter, r *http.Request) {
 	connector := HorizonConnector(r)
 
 	errorDelete := connector.Delete(id)
+
 	if errorDelete != nil {
 		Log(r).WithError(errorDelete).Error("error deleting blob:")
 		ape.RenderErr(w, problems.InternalError())
