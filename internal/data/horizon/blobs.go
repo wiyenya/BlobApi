@@ -56,6 +56,8 @@ func NewHorizonModel(log *logan.Entry, domain string, seed string) *HorizonModel
 	}
 }
 
+var ErrBlobNotFound = errors.New("blob not found")
+
 func (q *HorizonModel) Insert(userID int32, data types.JSONText) (int, error) {
 
 	blob := dataPkg.Blob{
@@ -104,15 +106,14 @@ func (q *HorizonModel) Insert(userID int32, data types.JSONText) (int, error) {
 
 func (q *HorizonModel) Get(id int) (*dataPkg.Blob, error) {
 
-	logan.New().Debug(id)
 	resp, err := q.horizon.Client().Get(fmt.Sprintf("/v3/data/%d", id))
+
 	if err != nil {
 		return nil, errors.Wrap(err, "request failed")
 	}
 
-	if len(resp) == 0 {
-		// resp is empty
-		return nil, errors.Wrap(err, "request failed")
+	if resp == nil && err == nil {
+		return nil, ErrBlobNotFound
 	}
 
 	var parsedResponse regources.DataResponse
@@ -134,6 +135,7 @@ func (q *HorizonModel) Get(id int) (*dataPkg.Blob, error) {
 func (q *HorizonModel) GetBlobList() ([]*dataPkg.Blob, error) {
 
 	response, err := q.horizon.Client().Get("/v3/data")
+
 	if err != nil {
 		return nil, errors.Wrap(err, "request failed")
 	}

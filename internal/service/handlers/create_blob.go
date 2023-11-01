@@ -2,9 +2,11 @@ package handlers
 
 import (
 	"BlobApi/internal/data"
+	hor "BlobApi/internal/data/horizon"
 	"BlobApi/internal/service/requests"
 	"BlobApi/resources"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
@@ -43,11 +45,22 @@ func CreateBlob(w http.ResponseWriter, r *http.Request) {
 
 	var blob *data.Blob
 	for {
-		blobFromGet, _ := connector.Get(blobId)
+		blobFromGet, err := connector.Get(blobId)
 		if blobFromGet != nil {
 			blob = blobFromGet
 			break
 		}
+
+		if err != nil {
+			if errors.Is(err, hor.ErrBlobNotFound) {
+				continue
+			}
+
+			Log(r).WithError(err).Error("error getting blob:")
+			ape.RenderErr(w, problems.InternalError())
+			return
+		}
+
 		time.Sleep(time.Second)
 	}
 
