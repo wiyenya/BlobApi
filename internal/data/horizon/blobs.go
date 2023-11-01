@@ -59,7 +59,6 @@ func NewHorizonModel(log *logan.Entry, domain string, seed string) *HorizonModel
 func (q *HorizonModel) Insert(userID int32, data types.JSONText) (int, error) {
 
 	blob := dataPkg.Blob{
-		Index:  1,
 		UserId: &userID,
 		Data:   data,
 	}
@@ -85,14 +84,36 @@ func (q *HorizonModel) Insert(userID int32, data types.JSONText) (int, error) {
 		return 0, errors.Wrap(err, "failed to unmarshal tx response")
 	}
 
-	//integer := txResponse.Result
+	// 	err = xdr.SafeUnmarshalBase64(result.ResultXDR, txResp)
 
-	return 0, nil
+	var resultID int
+
+	for _, err1 := range txResponse.Result.MustResults() {
+		a, err2 := err1.MustTr().GetCreateDataResult()
+		if !err2 {
+			return 0, errors.Wrap(err, "failed to get create data result")
+		}
+
+		resultID = int(a.Success.DataId)
+		break
+	}
+
+	return resultID, nil
+
 }
 
 func (q *HorizonModel) Get(id int) (*dataPkg.Blob, error) {
+
+	logan.New().Debug(id)
 	resp, err := q.horizon.Client().Get(fmt.Sprintf("/v3/data/%d", id))
 	if err != nil {
+		logan.New().Debug("test")
+		return nil, errors.Wrap(err, "request failed")
+	}
+
+	if len(resp) == 0 {
+		// resp is empty
+		logan.New().Debug("no blob found")
 		return nil, errors.Wrap(err, "request failed")
 	}
 
@@ -105,6 +126,8 @@ func (q *HorizonModel) Get(id int) (*dataPkg.Blob, error) {
 	if err := json.Unmarshal(parsedResponse.Data.Attributes.Value, &blob); err != nil {
 		return nil, errors.Wrap(err, "failed to unmarshal")
 	}
+
+	blob.Index = int64(id)
 
 	return &blob, nil
 

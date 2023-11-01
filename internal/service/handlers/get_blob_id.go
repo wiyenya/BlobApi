@@ -27,14 +27,12 @@ func GetBlobID(w http.ResponseWriter, r *http.Request) {
 	//Retrieve record by ID
 	blob, err := connector.Get(id)
 	if err != nil {
-
 		Log(r).WithError(err).Error("error getting blob:")
 		ape.RenderErr(w, problems.InternalError())
 		return
 	}
 
 	if blob == nil {
-
 		Log(r).WithError(err).Error("No blob found")
 		ape.RenderErr(w, problems.NotFound())
 		return

@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"BlobApi/internal/data"
 	"BlobApi/internal/service/requests"
 	"BlobApi/resources"
 	"encoding/json"
@@ -8,6 +9,7 @@ import (
 	"gitlab.com/distributed_lab/ape"
 	"gitlab.com/distributed_lab/ape/problems"
 	"net/http"
+	"time"
 )
 
 func CreateBlob(w http.ResponseWriter, r *http.Request) {
@@ -38,15 +40,18 @@ func CreateBlob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	//Getting a blob to return the created resource
-	blob, err := connector.Get(blobId)
-	if err != nil {
 
-		Log(r).WithError(err).Error("error getting blob:")
-		ape.RenderErr(w, problems.InternalError())
-		return
+	var blob *data.Blob
+	for {
+		blobFromGet, _ := connector.Get(blobId)
+		if blobFromGet != nil {
+			blob = blobFromGet
+			break
+		}
+		time.Sleep(time.Second)
 	}
 
-	//Wrap Blob in AttributeData and Response structures
+	// Wrap Blob in AttributeData and Response structures
 
 	BlobDataUnmarshal := make(map[string]interface{})
 	errUnmarshal := json.Unmarshal(blob.Data, &BlobDataUnmarshal)
@@ -54,7 +59,7 @@ func CreateBlob(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response := resources.BlobResponse{
+	resp := resources.BlobResponse{
 		Data: resources.Blob{
 			Key: resources.Key{
 				ID:           fmt.Sprint(blob.Index),
@@ -70,5 +75,5 @@ func CreateBlob(w http.ResponseWriter, r *http.Request) {
 	}
 
 	w.WriteHeader(http.StatusCreated)
-	ape.Render(w, &response)
+	ape.Render(w, &resp)
 }
